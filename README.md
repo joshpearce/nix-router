@@ -234,6 +234,3 @@ Tests run at build time via `pkgs.runCommand` and are integrated with `nix flake
 | `ulogd.nix` | Netfilter connection tracking configuration |
 | `network-irq.nix` | Network interface IRQ tuning |
 
-## License
-
-MIT - Feel free to use this as a template for your own router configuration.
