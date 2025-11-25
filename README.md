@@ -1,6 +1,6 @@
 # NixOS Router Configuration
 
-A NixOS-based router/gateway configuration using flakes. This project provides a complete network infrastructure-as-code setup for a home network with enterprise-grade features.
+A NixOS-based router/gateway configuration using flakes. This project provides a complete network infrastructure-as-code setup for a home network.
 
 ## Features
 
