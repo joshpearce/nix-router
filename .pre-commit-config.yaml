@@ -1,0 +1,32 @@
+repos:
+  - repo: local
+    hooks:
+      - id: block-private-config
+        name: Block private/config.nix from being committed
+        entry: bash -c 'if git diff --cached --name-only | grep -qE "^private/config\.nix$"; then echo "ERROR - private/config.nix must not be committed (use private/config.nix.age instead)"; exit 1; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: verify-private-encrypted
+        name: Verify private/config.nix.age is current
+        entry: make verify
+        language: system
+        pass_filenames: false
+        files: private/config\.nix
+      - id: nixfmt
+        name: nixfmt
+        entry: nixfmt
+        language: system
+        files: \.nix$
+        types: [file]
+      - id: statix
+        name: statix
+        entry: statix check
+        language: system
+        files: \.nix$
+        pass_filenames: false
+      - id: deadnix
+        name: deadnix
+        entry: deadnix --fail
+        language: system
+        files: \.nix$

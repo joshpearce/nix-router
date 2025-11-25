@@ -1,0 +1,8 @@
+result
+.DS_Store
+
+# Private configuration - decrypted file only (encrypted .age file is safe to commit)
+private/config.nix
+
+# Temp files from make verify
+.private.config.verify.tmp
