@@ -97,7 +97,7 @@ build: decrypt
 
 # Switch to the new configuration using private/ flake input override
 switch: decrypt
-	sudo nixos-rebuild switch --flake .#router --override-input private path:./$(PRIVATE_DIR)
+	nixos-rebuild switch --flake .#router --override-input private path:./$(PRIVATE_DIR)
 
 # Run all tests
 test:

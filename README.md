@@ -1,6 +1,6 @@
 # NixOS Router Configuration
 
-A NixOS-based router/gateway configuration using flakes. This project provides a complete network infrastructure-as-code setup for a home network.
+This is the NixOS-based router that I use at home. Sharing in case it helps anyone to make something similar.
 
 ## Features
 
@@ -10,13 +10,12 @@ A NixOS-based router/gateway configuration using flakes. This project provides a
 - **Tailscale VPN** - OAuth-based authentication with subnet routing for remote access
 - **DNS proxy** - Centralized DNS with upstream fallback (supports DoH)
 - **Dynamic DNS** - Automatic AWS Route53 updates when WAN IP changes
-- **Monitoring & observability** - Prometheus node-exporter, Vector log aggregation, ulogd network flow logging with Loki integration
+- **Monitoring & observability** - Prometheus node-exporter
 - **Secret management** - Age-encrypted secrets via agenix
 - **Email notifications** - AWS SES integration for system alerts
 - **Network flow logging** - ulogd netfilter connection tracking with Vector transforms for traffic analysis
 - **IRQ optimization** - Network interface interrupt tuning for performance
-- **mDNS/Avahi** - mDNS reflector across LAN, IoT, and hazmat VLANs
-- **VS Code Server** - Remote development support
+- **mDNS/Avahi** - mDNS reflector across select vlans
 - **Healthchecks.io** - External monitoring integration for scheduled tasks
 
 ## Prerequisites
@@ -25,7 +24,6 @@ A NixOS-based router/gateway configuration using flakes. This project provides a
 - [uv](https://docs.astral.sh/uv/) - Python package manager (used to run pre-commit hooks)
 - [agenix](https://github.com/ryantm/agenix) for runtime secret management
 - [age](https://github.com/FiloSottile/age) for encrypting private config
-- SSH key for decryption
 
 ## Quick Start
 
@@ -72,7 +70,7 @@ Create age-encrypted secrets for sensitive runtime values (passwords, API keys):
 ```bash
 # Edit your SSH public key into secrets/secrets.nix first, then:
 cd secrets
-agenix -e ses-smtp-user.age    # SES SMTP password
+agenix -e ses-smtp-user.age
 agenix -e aws-domain-mgr-key-id.age
 agenix -e aws-domain-mgr-secret.age
 # ... etc
