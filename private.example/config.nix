@@ -43,6 +43,13 @@ _: {
       endpoint = "https://loki.example.com";
     };
 
+    # Extra /etc/hosts entries (IP -> hostnames).
+    # Useful when Tailscale MagicDNS isn't available on the router (since it
+    # runs its own DNS server), or for any other static host mappings needed.
+    hosts = {
+      # "100.x.x.x" = [ "myhost.tail-net.ts.net" ];
+    };
+
     dhcp = {
       mgmt = [
         {

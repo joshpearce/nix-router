@@ -79,6 +79,12 @@ with types;
       };
     };
 
+    hosts = mkOption {
+      type = attrsOf (listOf str);
+      default = { };
+      description = "Extra /etc/hosts entries (IP -> hostnames)";
+    };
+
     dhcp = mkOption {
       type = attrsOf (
         listOf (submodule {

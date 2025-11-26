@@ -99,9 +99,7 @@
     hostName = "nix-router";
     nameservers = [ "10.13.84.1" ];
     dhcpcd.enable = false;
-    hosts = {
-      "REDACTED_IP" = [ "REDACTED_HOST" ];
-    };
+    inherit (config.private) hosts;
   };
 
   services = {
