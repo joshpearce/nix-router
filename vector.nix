@@ -1,6 +1,9 @@
 { config, ... }:
 let
   cfg = config.private;
+  # Syslog facility codes (RFC 5424) - must match ulogd.nix settings
+  LOCAL1 = "17"; # Flow logs (conntrack) + packet logs
+  LOCAL2 = "18"; # DNS redirect logs
 in
 {
   config = {
@@ -23,9 +26,35 @@ in
             };
           };
           transforms = {
+            # Route by syslog facility (set in ulogd.nix)
+            filter_flow_logs = {
+              type = "filter";
+              inputs = [ "journald" ];
+              condition = ''.SYSLOG_FACILITY == "${LOCAL1}"'';
+            };
+            filter_dns_logs = {
+              type = "filter";
+              inputs = [ "journald" ];
+              condition = ''.SYSLOG_FACILITY == "${LOCAL2}"'';
+            };
+            parse_dns_redirect = {
+              type = "remap";
+              inputs = [ "filter_dns_logs" ];
+              source = ''
+                # Parse: DNS-REDIRECT: IN=iot OUT= MAC=... SRC=10.13.93.50 DST=8.8.8.8 ... PROTO=UDP SPT=12345 DPT=53
+                kvs, err = parse_key_value(.message, field_delimiter: " ", accept_standalone_key: true)
+                .iface = kvs.IN
+                .src = kvs.SRC
+                .dst = kvs.DST
+                .proto = kvs.PROTO
+                .spt = kvs.SPT
+                .dpt = kvs.DPT
+                .prefix = "dns-redirect"
+              '';
+            };
             prep_for_metric = {
               type = "remap";
-              inputs = [ "journald" ];
+              inputs = [ "filter_flow_logs" ];
               source = ''
                 message_parts, err = split(.message, " ", limit: 2) # [DESTROY] ORIG: ...
                 message_parts, err = split(message_parts[1], ",", limit: 2)
@@ -133,6 +162,21 @@ in
               labels = {
                 app = "router";
                 netlog = "{{ prefix }}";
+              };
+            };
+            loki_dns = {
+              type = "loki";
+              inputs = [ "parse_dns_redirect" ];
+              encoding.codec = "json";
+              encoding.only_fields = [
+                "src"
+                "dst"
+                "iface"
+              ];
+              inherit (cfg.loki) endpoint;
+              labels = {
+                app = "router";
+                netlog = "dns-redirect";
               };
             };
           };

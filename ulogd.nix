@@ -17,21 +17,26 @@ let
       ];
 
       stack = [
+        # Packet logging (NFLOG group 1) - currently unused, no nftables rules send to group 1
         "log1:NFLOG,base1:BASE,ifi1:IFINDEX,ip2str1:IP2STR,print1:PRINTPKT,syslog1:SYSLOG"
-        "ct1:NFCT,ip2str1:IP2STR,print1:PRINTFLOW,syslog2:SYSLOG"
+        # DNS redirect logging (NFLOG group 2) - from firewall.nix prerouting chain
+        "log2:NFLOG,base1:BASE,ifi1:IFINDEX,ip2str1:IP2STR,print1:PRINTPKT,syslog2:SYSLOG"
+        # Connection flow logging (conntrack) - automatic, no nftables rules needed
+        "ct1:NFCT,ip2str1:IP2STR,print1:PRINTFLOW,syslog1:SYSLOG"
       ];
     };
-    log1 = {
-      group = 1;
-    }; # NFLOG config
-    ct1 = { }; # NFCT config (uses defaults)
+    log1 = { group = 1; }; # NFLOG group 1 - packet logging (unused)
+    log2 = { group = 2; }; # NFLOG group 2 - DNS redirect logging
+    ct1 = { };             # NFCT conntrack (uses defaults)
 
+    # LOCAL1 for flow logs and general packet logs (consumed by Vector prep_for_metric)
     syslog1 = {
       facility = "LOG_LOCAL1";
       level = "LOG_INFO";
     };
+    # LOCAL2 for DNS redirect logs (consumed by Vector parse_dns_redirect)
     syslog2 = {
-      facility = "LOG_LOCAL1";
+      facility = "LOG_LOCAL2";
       level = "LOG_INFO";
     };
   };

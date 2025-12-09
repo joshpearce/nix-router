@@ -80,11 +80,23 @@ in
           }
 
           table ip nat {
+            chain prerouting {
+              type nat hook prerouting priority -100; policy accept;
+
+              # Router DNS IPs - traffic to these doesn't need redirect
+              define router_dns = { 192.168.1.1, 10.13.84.1, 10.13.93.1, 10.13.86.1, 10.13.83.1, 10.13.99.1 }
+
+              # Redirect DNS going to external servers through local dnsproxy
+              # Uses NFLOG group 2 to keep separate from existing packet logs (group 1)
+              # Only intercept VLANs that use local DNS (excludes guest/hazmat which use external)
+              iifname { "${lanIface}", "${lanVlan}", "${iotVlan}", "${k8sVlan}" } udp dport 53 ip daddr != $router_dns log group 2 prefix "DNS-REDIRECT: " redirect
+              iifname { "${lanIface}", "${lanVlan}", "${iotVlan}", "${k8sVlan}" } tcp dport 53 ip daddr != $router_dns log group 2 prefix "DNS-REDIRECT: " redirect
+            }
             chain postrouting {
               type nat hook postrouting priority 100; policy accept;
               counter jump ts-postrouting
               oifname "${wanIface}" masquerade
-            } 
+            }
             chain ts-postrouting {
               meta mark & 0x00ff0000 == 0x00040000 counter masquerade
             }
