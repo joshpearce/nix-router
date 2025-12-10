@@ -17,6 +17,15 @@ in
       nftables = {
         enable = true;
         ruleset = ''
+          # Known DoT/DoH providers - for encrypted DNS detection
+          define encrypted_dns_servers = {
+            1.1.1.1, 1.0.0.1,                             # Cloudflare
+            8.8.8.8, 8.8.4.4,                             # Google
+            9.9.9.9, 149.112.112.112,                     # Quad9: +malware,+dnssec,-ecs
+            9.9.9.10, 149.112.112.10,                     # Quad9: -malware,-dnssec,-ecs
+            9.9.9.11, 149.112.112.11                      # Quad9: +malware,+dnssec,+ecs
+          }
+
           table ip filter {
             chain trace_chain {
               type filter hook prerouting priority -1;
@@ -49,6 +58,10 @@ in
             chain forward {
               type filter hook forward priority 0; policy drop;
               counter jump ts-forward
+
+              # Log connections to known DoT/DoH providers (NFLOG group 3)
+              iifname { "${lanIface}", "${lanVlan}", "${iotVlan}", "${k8sVlan}" } ip daddr $encrypted_dns_servers tcp dport { 443, 853 } ct state new log group 3 prefix "ENCRYPTED-DNS: "
+
               iifname { "${lanIface}" } oifname { "${wanIface}" } accept comment "Allow enp2s0 to WAN"
               iifname { "${lanVlan}" } oifname { "${wanIface}" } accept comment "Allow lan to WAN"
               iifname { "${k8sVlan}" } oifname { "${wanIface}" } accept comment "Allow k8s to WAN"
@@ -83,14 +96,14 @@ in
             chain prerouting {
               type nat hook prerouting priority -100; policy accept;
 
-              # Router DNS IPs - traffic to these doesn't need redirect
-              define router_dns = { 192.168.1.1, 10.13.84.1, 10.13.93.1, 10.13.86.1, 10.13.83.1, 10.13.99.1 }
+              # Private networks - DNS to these doesn't need redirect
+              define private_nets = { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 }
 
               # Redirect DNS going to external servers through local dnsproxy
               # Uses NFLOG group 2 to keep separate from existing packet logs (group 1)
               # Only intercept VLANs that use local DNS (excludes guest/hazmat which use external)
-              iifname { "${lanIface}", "${lanVlan}", "${iotVlan}", "${k8sVlan}" } udp dport 53 ip daddr != $router_dns log group 2 prefix "DNS-REDIRECT: " redirect
-              iifname { "${lanIface}", "${lanVlan}", "${iotVlan}", "${k8sVlan}" } tcp dport 53 ip daddr != $router_dns log group 2 prefix "DNS-REDIRECT: " redirect
+              iifname { "${lanIface}", "${lanVlan}", "${iotVlan}", "${k8sVlan}" } udp dport 53 ip daddr != $private_nets log group 2 prefix "DNS-REDIRECT: " redirect
+              iifname { "${lanIface}", "${lanVlan}", "${iotVlan}", "${k8sVlan}" } tcp dport 53 ip daddr != $private_nets log group 2 prefix "DNS-REDIRECT: " redirect
             }
             chain postrouting {
               type nat hook postrouting priority 100; policy accept;

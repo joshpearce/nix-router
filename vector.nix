@@ -4,6 +4,7 @@ let
   # Syslog facility codes (RFC 5424) - must match ulogd.nix settings
   LOCAL1 = "17"; # Flow logs (conntrack) + packet logs
   LOCAL2 = "18"; # DNS redirect logs
+  LOCAL3 = "19"; # Encrypted DNS (DoT/DoH) logs
 in
 {
   config = {
@@ -37,6 +38,11 @@ in
               inputs = [ "journald" ];
               condition = ''.SYSLOG_FACILITY == "${LOCAL2}"'';
             };
+            filter_encrypted_dns_logs = {
+              type = "filter";
+              inputs = [ "journald" ];
+              condition = ''.SYSLOG_FACILITY == "${LOCAL3}"'';
+            };
             parse_dns_redirect = {
               type = "remap";
               inputs = [ "filter_dns_logs" ];
@@ -50,6 +56,21 @@ in
                 .spt = kvs.SPT
                 .dpt = kvs.DPT
                 .prefix = "dns-redirect"
+              '';
+            };
+            parse_encrypted_dns = {
+              type = "remap";
+              inputs = [ "filter_encrypted_dns_logs" ];
+              source = ''
+                # Parse: ENCRYPTED-DNS: IN=lan OUT=enp1s0 MAC=... SRC=10.13.84.50 DST=1.1.1.1 ... PROTO=TCP SPT=12345 DPT=853
+                kvs, err = parse_key_value(.message, field_delimiter: " ", accept_standalone_key: true)
+                .iface = kvs.IN
+                .src = kvs.SRC
+                .dst = kvs.DST
+                .proto = kvs.PROTO
+                .spt = kvs.SPT
+                .dpt = kvs.DPT
+                .prefix = "encrypted-dns"
               '';
             };
             prep_for_metric = {
@@ -177,6 +198,22 @@ in
               labels = {
                 app = "router";
                 netlog = "dns-redirect";
+              };
+            };
+            loki_encrypted_dns = {
+              type = "loki";
+              inputs = [ "parse_encrypted_dns" ];
+              encoding.codec = "json";
+              encoding.only_fields = [
+                "src"
+                "dst"
+                "dpt"
+                "iface"
+              ];
+              inherit (cfg.loki) endpoint;
+              labels = {
+                app = "router";
+                netlog = "encrypted-dns";
               };
             };
           };

@@ -21,12 +21,15 @@ let
         "log1:NFLOG,base1:BASE,ifi1:IFINDEX,ip2str1:IP2STR,print1:PRINTPKT,syslog1:SYSLOG"
         # DNS redirect logging (NFLOG group 2) - from firewall.nix prerouting chain
         "log2:NFLOG,base1:BASE,ifi1:IFINDEX,ip2str1:IP2STR,print1:PRINTPKT,syslog2:SYSLOG"
+        # Encrypted DNS logging (NFLOG group 3) - DoT/DoH detection from firewall.nix forward chain
+        "log3:NFLOG,base1:BASE,ifi1:IFINDEX,ip2str1:IP2STR,print1:PRINTPKT,syslog3:SYSLOG"
         # Connection flow logging (conntrack) - automatic, no nftables rules needed
         "ct1:NFCT,ip2str1:IP2STR,print1:PRINTFLOW,syslog1:SYSLOG"
       ];
     };
     log1 = { group = 1; }; # NFLOG group 1 - packet logging (unused)
     log2 = { group = 2; }; # NFLOG group 2 - DNS redirect logging
+    log3 = { group = 3; }; # NFLOG group 3 - encrypted DNS (DoT/DoH) logging
     ct1 = { };             # NFCT conntrack (uses defaults)
 
     # LOCAL1 for flow logs and general packet logs (consumed by Vector prep_for_metric)
@@ -37,6 +40,11 @@ let
     # LOCAL2 for DNS redirect logs (consumed by Vector parse_dns_redirect)
     syslog2 = {
       facility = "LOG_LOCAL2";
+      level = "LOG_INFO";
+    };
+    # LOCAL3 for encrypted DNS logs (consumed by Vector parse_encrypted_dns)
+    syslog3 = {
+      facility = "LOG_LOCAL3";
       level = "LOG_INFO";
     };
   };
