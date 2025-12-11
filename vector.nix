@@ -227,7 +227,7 @@ in
               inherit (cfg.loki) endpoint;
               labels = {
                 app = "router";
-                netlog = "nto-redirect";
+                netlog = "ntp-redirect";
               };
             };
             loki_encrypted_dns = {
