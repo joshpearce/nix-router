@@ -127,7 +127,7 @@
       ];
       serverOption = "iburst";
       enableRTCTrimming = false;
-      initstepslew = false;
+      initstepslew.enabled = false;
       extraConfig = ''
         maxupdateskew 100.0
         rtcsync
