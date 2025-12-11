@@ -116,6 +116,25 @@
       };
     };
 
+    chrony = {
+      enable = true;
+      servers = [
+        "time1.facebook.com"
+        "time2.facebook.com"
+        "time3.facebook.com"
+        "time4.facebook.com"
+        "time5.facebook.com"
+      ];
+      serverOption = "iburst";
+      enableRTCTrimming = false;
+      initstepslew = false;
+      extraConfig = ''
+        maxupdateskew 100.0
+        rtcsync
+        makestep 1 3
+      '';
+    };
+
     udev = {
       extraRules = ''
         ACTION=="add", SUBSYSTEM=="module", KERNEL=="nf_conntrack", \

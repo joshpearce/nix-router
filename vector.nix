@@ -33,7 +33,7 @@ in
               inputs = [ "journald" ];
               condition = ''.SYSLOG_FACILITY == "${LOCAL1}"'';
             };
-            filter_dns_logs = {
+            filter_redirect_logs = {
               type = "filter";
               inputs = [ "journald" ];
               condition = ''.SYSLOG_FACILITY == "${LOCAL2}"'';
@@ -43,9 +43,24 @@ in
               inputs = [ "journald" ];
               condition = ''.SYSLOG_FACILITY == "${LOCAL3}"'';
             };
+            parse_ntp_redirect = {
+              type = "remap";
+              inputs = [ "filter_redirect_logs" ];
+              source = ''
+                # Parse: NTP-REDIRECT: IN=iot OUT= MAC=... SRC=10.13.93.50 DST=8.8.8.8 ... PROTO=UDP SPT=12345 DPT=53
+                kvs, err = parse_key_value(.message, field_delimiter: " ", accept_standalone_key: true)
+                .iface = kvs.IN
+                .src = kvs.SRC
+                .dst = kvs.DST
+                .proto = kvs.PROTO
+                .spt = kvs.SPT
+                .dpt = kvs.DPT
+                .prefix = "ntp-redirect"
+              '';
+            };
             parse_dns_redirect = {
               type = "remap";
-              inputs = [ "filter_dns_logs" ];
+              inputs = [ "filter_redirect_logs" ];
               source = ''
                 # Parse: DNS-REDIRECT: IN=iot OUT= MAC=... SRC=10.13.93.50 DST=8.8.8.8 ... PROTO=UDP SPT=12345 DPT=53
                 kvs, err = parse_key_value(.message, field_delimiter: " ", accept_standalone_key: true)
@@ -198,6 +213,21 @@ in
               labels = {
                 app = "router";
                 netlog = "dns-redirect";
+              };
+            };
+            loki_ntp = {
+              type = "loki";
+              inputs = [ "parse_ntp_redirect" ];
+              encoding.codec = "json";
+              encoding.only_fields = [
+                "src"
+                "dst"
+                "iface"
+              ];
+              inherit (cfg.loki) endpoint;
+              labels = {
+                app = "router";
+                netlog = "nto-redirect";
               };
             };
             loki_encrypted_dns = {

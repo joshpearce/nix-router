@@ -9,6 +9,18 @@ let
   hazmatVlan = "hazmat";
   guestVlan = "guest";
 
+  # Service port manifest for firewall rules
+  # Trusted LANs (lan, k8s) - full router access
+  trustedInputTcp = "22, 53, 9100";  # ssh, dns, node_exporter
+  trustedInputUdp = "53, 67, 123";   # dns, dhcp, ntp
+
+  # Restricted VLANs (iot) - limited router access
+  iotInputTcp = "53";                # dns
+  iotInputUdp = "53, 67, 123";       # dns, dhcp, ntp
+
+  # Isolated VLANs (guest, hazmat) - minimal router access
+  isolatedInputUdp = "67";           # dhcp only
+
 in
 {
   config = {
@@ -46,7 +58,7 @@ in
               iifname { "${wanIface}", "${tsIface}" } icmp type { destination-unreachable, time-exceeded } counter accept comment "Allow ICMP errors"
               iifname { "${wanIface}" } tcp dport { 8044 } counter drop comment "Temporarily port 8044 for ssh"
               iifname { "${iotVlan}" } ip saddr { 10.13.93.14, 10.13.93.50 } udp dport { mdns } counter accept comment "multicast for media devices, printers"
-              iifname { "${iotVlan}" } udp dport { 53 } counter accept comment "Allow dns from iot to local dns proxy"
+              iifname { "${iotVlan}" } udp dport { 53, 123 } counter accept comment "Allow dns and time from iot to local dns proxy and chrony servers"
               iifname { "${hazmatVlan}", "${iotVlan}", "${guestVlan}" } udp dport 67 accept comment "Allow DHCP Discover and Request message to reach the router"
               iifname "${wanIface}" counter drop comment "Drop all other unsolicited traffic from wan"
             }
@@ -99,11 +111,12 @@ in
               # Private networks - DNS to these doesn't need redirect
               define private_nets = { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 }
 
-              # Redirect DNS going to external servers through local dnsproxy
+              # Redirect DNS, NTP going to external servers through local dnsproxy
               # Uses NFLOG group 2 to keep separate from existing packet logs (group 1)
               # Only intercept VLANs that use local DNS (excludes guest/hazmat which use external)
               iifname { "${lanIface}", "${lanVlan}", "${iotVlan}", "${k8sVlan}" } udp dport 53 ip daddr != $private_nets log group 2 prefix "DNS-REDIRECT: " redirect
               iifname { "${lanIface}", "${lanVlan}", "${iotVlan}", "${k8sVlan}" } tcp dport 53 ip daddr != $private_nets log group 2 prefix "DNS-REDIRECT: " redirect
+              iifname { "${lanIface}", "${lanVlan}", "${iotVlan}", "${k8sVlan}" } udp dport 123 ip daddr != $private_nets log group 2 prefix "NTP-REDIRECT: " redirect
             }
             chain postrouting {
               type nat hook postrouting priority 100; policy accept;

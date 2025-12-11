@@ -89,6 +89,8 @@ in
               PoolSize = 200;
               EmitDNS = "yes";
               DNS = "192.168.1.1";
+              EmitNTP = "yes";
+              NTP = "192.168.1.1";
             };
             dhcpServerStaticLeases = map (lease: {
               Address = lease.address;
@@ -107,6 +109,8 @@ in
               PoolSize = 200;
               EmitDNS = "yes";
               DNS = "10.13.84.1";
+              EmitNTP = "yes";
+              NTP = "10.13.84.1";
             };
             dhcpServerStaticLeases = map (lease: {
               Address = lease.address;
@@ -125,6 +129,8 @@ in
               PoolSize = 200;
               EmitDNS = "yes";
               DNS = "10.13.93.1";
+              EmitNTP = "yes";
+              NTP = "10.13.93.1";
             };
             dhcpServerStaticLeases = map (lease: {
               Address = lease.address;
@@ -157,6 +163,8 @@ in
               PoolSize = 29;
               EmitDNS = "yes";
               DNS = "10.13.86.1";
+              EmitNTP = "yes";
+              NTP = "10.13.86.1";
             };
           };
           "50-vlan-hazmat" = {
