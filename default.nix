@@ -133,6 +133,7 @@
         rtcsync
         makestep 1 3
         allow
+        bindaddress 0.0.0.0
       '';
     };
 
