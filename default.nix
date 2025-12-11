@@ -132,6 +132,7 @@
         maxupdateskew 100.0
         rtcsync
         makestep 1 3
+        allow
       '';
     };
 
