@@ -55,6 +55,11 @@ let
     dns_ip=$(${lib.getExe pkgs.awscli} route53 list-resource-record-sets --hosted-zone-id $HOSTED_ZONE_ID --output json | ${lib.getExe pkgs.jq} -r '.ResourceRecordSets[] | select(.Name == "${homeDomain}.") | .ResourceRecords[0].Value')
     echo "DNS IP: ''${dns_ip}"
 
+    if [ -z "''${dns_ip}" ]; then
+      echo "Failed to fetch DNS IP from Route53. Exiting."
+      exit 1
+    fi
+
     rm -rf /tmp/update-ip/
     mkdir -p /tmp/update-ip/
 
