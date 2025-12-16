@@ -17,7 +17,7 @@ PRIVATE_DIR := private
 PRIVATE_CONFIG := $(PRIVATE_DIR)/config.nix
 PRIVATE_CONFIG_AGE := $(PRIVATE_DIR)/config.nix.age
 
-.PHONY: decrypt encrypt verify build switch clean help init test test-verbose lint
+.PHONY: decrypt encrypt verify build switch test clean help init check check-verbose lint
 
 help:
 	@echo "Available targets:"
@@ -27,8 +27,9 @@ help:
 	@echo "  verify   - Verify encrypted file matches decrypted"
 	@echo "  build    - Build the NixOS configuration"
 	@echo "  switch   - Switch to the new configuration"
-	@echo "  test     - Run all tests via nix flake check"
-	@echo "  test-verbose - Run tests with verbose output"
+	@echo "  test     - Test the new configuration (nixos-rebuild test)"
+	@echo "  check    - Run all tests via nix flake check"
+	@echo "  check-verbose - Run flake check with verbose output"
 	@echo "  lint     - Run pre-commit hooks on all files"
 	@echo "  clean    - Remove decrypted config"
 
@@ -99,12 +100,16 @@ build: decrypt
 switch: decrypt
 	nixos-rebuild switch --flake .#router --override-input private path:./$(PRIVATE_DIR)
 
-# Run all tests
-test:
+# Test the new configuration (activates without adding to bootloader)
+test: decrypt
+	nixos-rebuild test --flake .#router --override-input private path:./$(PRIVATE_DIR)
+
+# Run all flake checks
+check:
 	nix flake check
 
-# Run tests with verbose output (shows build logs even if cached)
-test-verbose:
+# Run flake checks with verbose output (shows build logs even if cached)
+check-verbose:
 	@nix flake check
 	@echo ""
 	@echo "=== Test Logs ==="

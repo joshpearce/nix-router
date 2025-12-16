@@ -149,8 +149,9 @@ make switch
 | `make verify` | Verify encrypted file matches decrypted (used by pre-commit) |
 | `make build` | Build the NixOS configuration |
 | `make switch` | Switch to the new configuration (uses sudo internally) |
-| `make test` | Run all tests via `nix flake check` |
-| `make test-verbose` | Run tests and show build logs |
+| `make test` | Test the new configuration (activates without adding to bootloader) |
+| `make check` | Run all tests via `nix flake check` |
+| `make check-verbose` | Run flake check and show build logs |
 | `make lint` | Run pre-commit hooks on all files |
 | `make clean` | Remove decrypted `private/config.nix` |
 
@@ -200,11 +201,11 @@ agenix -r
 The project includes unit tests that validate configuration logic before deployment:
 
 ```bash
-# Run all tests
-make test
+# Run all flake checks
+make check
 
-# Run tests and show build logs
-make test-verbose
+# Run flake checks and show build logs
+make check-verbose
 ```
 
 ### Test Coverage
