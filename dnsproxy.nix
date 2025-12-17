@@ -4,11 +4,9 @@
   ...
 }:
 let
-  #bootstrapDNS = "9.9.9.9:53";
   bootstrapDNS = "8.8.8.8:53";
   primaryDNS = "10.13.93.50:53";
-  #secondaryDNS = "https://dns10.quad9.net/dns-query";
-  secondaryDNS = "https://dns.google/dns-query";
+  secondaryDNS = "https://9.9.9.10/dns-query";
   listen = "-l 192.168.1.1 -l 10.13.84.1 -l 10.13.93.1 -l 10.13.83.1 -l 10.13.99.1 -l 10.13.86.1 -p 53";
 in
 {
