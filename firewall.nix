@@ -9,18 +9,6 @@ let
   hazmatVlan = "hazmat";
   guestVlan = "guest";
 
-  # Service port manifest for firewall rules
-  # Trusted LANs (lan, k8s) - full router access
-  trustedInputTcp = "22, 53, 9100";  # ssh, dns, node_exporter
-  trustedInputUdp = "53, 67, 123";   # dns, dhcp, ntp
-
-  # Restricted VLANs (iot) - limited router access
-  iotInputTcp = "53";                # dns
-  iotInputUdp = "53, 67, 123";       # dns, dhcp, ntp
-
-  # Isolated VLANs (guest, hazmat) - minimal router access
-  isolatedInputUdp = "67";           # dhcp only
-
 in
 {
   config = {
@@ -57,7 +45,7 @@ in
               iifname { "${wanIface}", "${tsIface}" } icmp type { echo-request } limit rate 10/second counter accept comment "Allow ICMP ping with rate limit"
               iifname { "${wanIface}", "${tsIface}" } icmp type { destination-unreachable, time-exceeded } counter accept comment "Allow ICMP errors"
               iifname { "${wanIface}" } tcp dport { 8044 } counter drop comment "Temporarily port 8044 for ssh"
-              iifname { "${iotVlan}" } ip saddr { 10.13.93.14, 10.13.93.50 } udp dport { mdns } counter accept comment "multicast for media devices, printers"
+              iifname { "${iotVlan}" } ip saddr { 10.13.93.50 } udp dport { mdns } counter accept comment "multicast for media devices, printers"
               iifname { "${iotVlan}" } udp dport { 53, 123 } counter accept comment "Allow dns and time from iot to local dns proxy and chrony servers"
               iifname { "${hazmatVlan}", "${iotVlan}", "${guestVlan}" } udp dport 67 accept comment "Allow DHCP Discover and Request message to reach the router"
               iifname "${wanIface}" counter drop comment "Drop all other unsolicited traffic from wan"

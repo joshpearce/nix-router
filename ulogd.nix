@@ -27,10 +27,16 @@ let
         "ct1:NFCT,ip2str1:IP2STR,print1:PRINTFLOW,syslog1:SYSLOG"
       ];
     };
-    log1 = { group = 1; }; # NFLOG group 1 - packet logging (unused)
-    log2 = { group = 2; }; # NFLOG group 2 - DNS redirect logging
-    log3 = { group = 3; }; # NFLOG group 3 - encrypted DNS (DoT/DoH) logging
-    ct1 = { };             # NFCT conntrack (uses defaults)
+    log1 = {
+      group = 1;
+    }; # NFLOG group 1 - packet logging (unused)
+    log2 = {
+      group = 2;
+    }; # NFLOG group 2 - DNS redirect logging
+    log3 = {
+      group = 3;
+    }; # NFLOG group 3 - encrypted DNS (DoT/DoH) logging
+    ct1 = { }; # NFCT conntrack (uses defaults)
 
     # LOCAL1 for flow logs and general packet logs (consumed by Vector prep_for_metric)
     syslog1 = {
