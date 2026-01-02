@@ -9,6 +9,12 @@ let
   hazmatVlan = "hazmat";
   guestVlan = "guest";
 
+  # Named hosts
+  homeAssistant = "10.13.93.50";
+  nas = "10.13.84.100";
+  cloudKey = "192.168.1.5";
+  blockedIotDevices = "10.13.93.16, 10.13.93.17, 10.13.93.14";
+
 in
 {
   config = {
@@ -45,7 +51,7 @@ in
               iifname { "${wanIface}", "${tsIface}" } icmp type { echo-request } limit rate 10/second counter accept comment "Allow ICMP ping with rate limit"
               iifname { "${wanIface}", "${tsIface}" } icmp type { destination-unreachable, time-exceeded } counter accept comment "Allow ICMP errors"
               iifname { "${wanIface}" } tcp dport { 8044 } counter drop comment "Temporarily port 8044 for ssh"
-              iifname { "${iotVlan}" } ip saddr { 10.13.93.50 } udp dport { mdns } counter accept comment "multicast for media devices, printers"
+              iifname { "${iotVlan}" } ip saddr { ${homeAssistant} } udp dport { mdns } counter accept comment "multicast for media devices, printers"
               iifname { "${iotVlan}" } udp dport { 53, 123 } counter accept comment "Allow dns and time from iot to local dns proxy and chrony servers"
               iifname { "${hazmatVlan}", "${iotVlan}", "${guestVlan}" } udp dport 67 accept comment "Allow DHCP Discover and Request message to reach the router"
               iifname "${wanIface}" counter drop comment "Drop all other unsolicited traffic from wan"
@@ -58,32 +64,58 @@ in
             chain forward {
               type filter hook forward priority 0; policy drop;
               counter jump ts-forward
+              ct state invalid counter drop comment "Drop invalid connections"
+              ct state { established, related } accept comment "Allow all established/related"
 
               # Log connections to known DoT/DoH providers (NFLOG group 3)
               iifname { "${lanIface}", "${lanVlan}", "${iotVlan}", "${k8sVlan}" } ip daddr $encrypted_dns_servers tcp dport { 443, 853 } ct state new log group 3 prefix "ENCRYPTED-DNS: "
 
-              iifname { "${lanIface}" } oifname { "${wanIface}" } accept comment "Allow enp2s0 to WAN"
-              iifname { "${lanVlan}" } oifname { "${wanIface}" } accept comment "Allow lan to WAN"
-              iifname { "${k8sVlan}" } oifname { "${wanIface}" } accept comment "Allow k8s to WAN"
-              iifname { "${k8sVlan}" } oifname { "${k8sVlan}" } accept comment "hairpinning on this iface"
-              ip saddr { 10.13.93.16, 10.13.93.17, 10.13.93.14 } oifname { "${wanIface}" } counter drop comment "Block wiz bulbs and printer from internet"
-              iifname { "${iotVlan}" } oifname { "${wanIface}" } accept comment "Allow iot to WAN"
-              iifname { "${guestVlan}" } oifname { "${wanIface}" } accept comment "Allow guest to WAN"
-              iifname { "${hazmatVlan}" } oifname { "${wanIface}" } accept comment "Allow hazmat to WAN"
-              iifname { "${wanIface}" } oifname { "${lanIface}", "${lanVlan}", "${iotVlan}", "${guestVlan}", "${hazmatVlan}", "${k8sVlan}" } ct state { established, related } accept comment "Allow established back to All"
-              iifname { "${lanVlan}", "${k8sVlan}" } oifname { "${iotVlan}" } counter accept comment "Allow trusted LAN to IoT"
-              iifname { "${iotVlan}" } oifname { "${lanVlan}", "${k8sVlan}", "${tsIface}" } ct state { established, related } counter accept comment "Allow established from iot back to LANs"
-              iifname { "${k8sVlan}" } oifname { "${lanVlan}" } ct state { established, related } counter accept comment "Allow established from k8s back to LAN"
-              iifname { "${lanVlan}" } oifname { "${tsIface}" } ct state { established, related } counter accept comment "Allow established from LAN back to tailscale"
-              iifname { "${lanVlan}" } ip daddr 192.168.1.0/24 counter accept comment "Allow trusted LAN to Mgmt (default)"
-              iifname { "${lanVlan}" } oifname { "${k8sVlan}" } counter accept comment "Allow  LAN to k8s"
-              iifname { "${tsIface}" } ip daddr { 192.168.1.156, 10.13.84.181, 10.13.93.50, 10.13.84.104 } counter accept comment "Allow tailscale subnet routing"
-              ip saddr 192.168.1.0/24 oifname { "${lanVlan}" } ct state { established, related } counter accept comment "Allow established back to LAN"
-              ip saddr 10.13.93.50 ip daddr 10.13.84.100 tcp dport { 22, 3493 } counter accept comment "allow ssh and NUT from home assistant to nas"
-              ip saddr 10.13.93.50 ip daddr 192.168.1.5 tcp dport { 443 } counter accept comment "allow HA to talk to CloudKey for Protect events"
-              ip saddr 10.13.93.50 ip daddr 10.13.84.100 tcp dport { 5432 } counter accept comment "allow HA to talk to Postgres"
-              ip saddr 192.168.1.5 ip daddr 10.13.93.50 ct state { established, related } counter accept comment "Allow established CloudKey back to HA"
+              # Route to per-zone chains
+              iifname { "${lanIface}" } jump from-mgmt
+              iifname { "${lanVlan}" } jump from-lan
+              iifname { "${k8sVlan}" } jump from-k8s
+              iifname { "${iotVlan}" } jump from-iot
+              iifname { "${guestVlan}" } jump from-guest
+              iifname { "${hazmatVlan}" } jump from-hazmat
+              iifname { "${tsIface}" } jump from-tailscale
             }
+
+            chain from-mgmt {
+              oifname { "${wanIface}" } accept comment "Mgmt to WAN"
+            }
+
+            chain from-lan {
+              oifname { "${wanIface}" } accept comment "LAN to WAN"
+              oifname { "${iotVlan}" } accept comment "LAN to IoT"
+              oifname { "${k8sVlan}" } accept comment "LAN to k8s"
+              ip daddr 192.168.1.0/24 accept comment "LAN to Mgmt network"
+            }
+
+            chain from-k8s {
+              oifname { "${wanIface}" } accept comment "k8s to WAN"
+              oifname { "${k8sVlan}" } accept comment "k8s hairpin"
+              oifname { "${iotVlan}" } accept comment "k8s to IoT"
+            }
+
+            chain from-iot {
+              ip saddr { ${blockedIotDevices} } oifname { "${wanIface}" } counter drop comment "Block select IoT devices from internet"
+              oifname { "${wanIface}" } accept comment "IoT to WAN"
+              ip saddr ${homeAssistant} ip daddr ${nas} tcp dport { 22, 3493, 5432 } accept comment "HA to NAS (ssh, NUT, postgres)"
+              ip saddr ${homeAssistant} ip daddr ${cloudKey} tcp dport { 443 } accept comment "HA to CloudKey"
+            }
+
+            chain from-guest {
+              oifname { "${wanIface}" } accept comment "Guest to WAN only"
+            }
+
+            chain from-hazmat {
+              oifname { "${wanIface}" } accept comment "Hazmat to WAN only"
+            }
+
+            chain from-tailscale {
+              ip daddr { 192.168.1.156, 10.13.84.181, ${homeAssistant}, 10.13.84.104 } accept comment "Tailscale subnet routing"
+            }
+
             chain ts-forward {
               iifname "${tsIface}" counter meta mark set mark and 0xff00ffff xor 0x40000
               meta mark & 0x00ff0000 == 0x00040000 counter accept
