@@ -11,29 +11,39 @@ let
 
   # IP lookup helpers - explicitly list networks for reliable NixOS module evaluation
   allDevices =
-    (config.private.ip_manifest.mgmt or []) ++
-    (config.private.ip_manifest.lan or []) ++
-    (config.private.ip_manifest.iot or []) ++
-    (config.private.ip_manifest.hazmat or []);
+    (config.private.ip_manifest.mgmt or [ ])
+    ++ (config.private.ip_manifest.lan or [ ])
+    ++ (config.private.ip_manifest.iot or [ ])
+    ++ (config.private.ip_manifest.hazmat or [ ]);
 
-  findDevice = name:
-    let matches = builtins.filter (d: d.name == name) allDevices;
-    in if matches == [] then null else builtins.head matches;
+  findDevice =
+    name:
+    let
+      matches = builtins.filter (d: d.name == name) allDevices;
+    in
+    if matches == [ ] then null else builtins.head matches;
 
-  getIp = name:
-    let device = findDevice name;
-    in if device == null
-       then builtins.throw "firewall.nix: Device '${name}' not found in ip_manifest"
-       else device.address;
+  getIp =
+    name:
+    let
+      device = findDevice name;
+    in
+    if device == null then
+      builtins.throw "firewall.nix: Device '${name}' not found in ip_manifest"
+    else
+      device.address;
 
-  getIps = names:
-    builtins.concatStringsSep ", " (map getIp names);
+  getIps = names: builtins.concatStringsSep ", " (map getIp names);
 
   # Named hosts - looked up from ip_manifest
   homeAssistant = getIp "homeassistant";
   nas = getIp "nas";
   cloudKey = getIp "CloudKey2";
-  blockedIotDevices = getIps [ "wiz1" "wiz2" "printer" ];
+  blockedIotDevices = getIps [
+    "wiz1"
+    "wiz2"
+    "printer"
+  ];
 
 in
 {
@@ -133,7 +143,7 @@ in
             }
 
             chain from-tailscale {
-              ip daddr { ${getIp "NAS-IPMI"}, ${homeAssistant}, ${getIp "DESKTOP-7H3GTTS"} } accept comment "Tailscale subnet routing"
+              ip daddr { ${getIp "NAS-IPMI"}, ${homeAssistant}, ${getIp "WINDOWS-VM1"} } accept comment "Tailscale subnet routing"
             }
 
             chain ts-forward {

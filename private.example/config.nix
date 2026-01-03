@@ -114,7 +114,7 @@ _: {
           macAddress = "aa:bb:cc:dd:ee:14";
           vendor = "QEMU";
           assignment = "dhcp";
-          name = "DESKTOP-7H3GTTS";
+          name = "WINDOWS-VM1";
         }
         # Client devices (phones, laptops) - name may be empty if unknown
         {
