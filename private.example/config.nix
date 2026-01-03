@@ -50,46 +50,128 @@ _: {
       # "100.x.x.x" = [ "myhost.tail-net.ts.net" ];
     };
 
-    dhcp = {
+    # Complete manifest of all known IP assignments by network.
+    # - assignment = "dhcp": Device uses DHCP; router provides a static lease (reservation)
+    # - assignment = "static": Device has a static IP configured on the device itself
+    # Devices with assignment="dhcp" are used by networkd.nix for DHCP reservations.
+    ip_manifest = {
       mgmt = [
+        # Infrastructure devices (UniFi, IPMI, etc.)
         {
-          name = "unifi-controller";
           address = "192.168.1.10";
           macAddress = "aa:bb:cc:dd:ee:01";
+          vendor = "Ubiquiti";
+          assignment = "dhcp";
+          name = "unifi-controller";
         }
         {
-          name = "ipmi";
           address = "192.168.1.20";
           macAddress = "aa:bb:cc:dd:ee:02";
+          vendor = "Supermicro";
+          assignment = "dhcp";
+          name = "ipmi";
+        }
+        {
+          address = "192.168.1.25";
+          macAddress = "aa:bb:cc:dd:ee:03";
+          vendor = "Ubiquiti";
+          assignment = "dhcp";
+          name = "office-ap";
+        }
+        {
+          address = "192.168.1.30";
+          macAddress = "aa:bb:cc:dd:ee:04";
+          vendor = "Ubiquiti";
+          assignment = "dhcp";
+          name = "living-room-ap";
         }
       ];
       lan = [
+        # Servers and workstations
         {
-          name = "nas";
-          address = "10.13.84.100";
-          macAddress = "aa:bb:cc:dd:ee:10";
-        }
-        {
-          name = "workstation";
           address = "10.13.84.50";
           macAddress = "aa:bb:cc:dd:ee:11";
+          vendor = "Dell";
+          assignment = "dhcp";
+          name = "workstation";
+        }
+        {
+          address = "10.13.84.100";
+          macAddress = "aa:bb:cc:dd:ee:10";
+          vendor = "Supermicro";
+          assignment = "dhcp";
+          name = "nas";
+        }
+        # Client devices (phones, laptops) - name may be empty if unknown
+        {
+          address = "10.13.84.150";
+          macAddress = "aa:bb:cc:dd:ee:12";
+          vendor = "Apple";
+          assignment = "dhcp";
+          name = "macbook";
+        }
+        {
+          address = "10.13.84.151";
+          macAddress = "aa:bb:cc:dd:ee:13";
+          vendor = "";
+          assignment = "dhcp";
+          name = "";
         }
       ];
       iot = [
+        # Devices with static IPs configured on the device (e.g., ESPHome, Tasmota)
         {
-          name = "homeassistant";
-          address = "10.13.93.50";
-          macAddress = "aa:bb:cc:dd:ee:20";
+          address = "10.13.93.10";
+          macAddress = "aa:bb:cc:dd:ee:30";
+          vendor = "Espressif";
+          assignment = "static";
+          name = "garage-sensor";
         }
         {
-          name = "printer";
+          address = "10.13.93.11";
+          macAddress = "aa:bb:cc:dd:ee:31";
+          vendor = "Espressif";
+          assignment = "static";
+          name = "";
+        }
+        {
+          address = "10.13.93.12";
+          macAddress = "aa:bb:cc:dd:ee:32";
+          vendor = "Espressif";
+          assignment = "static";
+          name = "";
+        }
+        # Devices using DHCP reservations
+        {
           address = "10.13.93.14";
           macAddress = "aa:bb:cc:dd:ee:21";
+          vendor = "Brother";
+          assignment = "dhcp";
+          name = "printer";
         }
         {
-          name = "smart-plug";
+          address = "10.13.93.50";
+          macAddress = "aa:bb:cc:dd:ee:20";
+          vendor = "";
+          assignment = "dhcp";
+          name = "homeassistant";
+        }
+        {
           address = "10.13.93.100";
-          macAddress = "aa:bb:cc:dd:ee:22";
+          macAddress = "aa:bb:cc:dd:ee:33";
+          vendor = "Philips";
+          assignment = "dhcp";
+          name = "hue-bridge";
+        }
+      ];
+      hazmat = [
+        # Untrusted devices on isolated network
+        {
+          address = "10.13.99.150";
+          macAddress = "aa:bb:cc:dd:ee:40";
+          vendor = "";
+          assignment = "dhcp";
+          name = "";
         }
       ];
     };

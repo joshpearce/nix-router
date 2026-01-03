@@ -85,27 +85,41 @@ with types;
       description = "Extra /etc/hosts entries (IP -> hostnames)";
     };
 
-    dhcp = mkOption {
+    ip_manifest = mkOption {
       type = attrsOf (
         listOf (submodule {
           options = {
-            name = mkOption {
-              type = str;
-              description = "Device name (for documentation)";
-            };
             address = mkOption {
               type = str;
-              description = "Static IP address";
+              description = "IP address";
             };
             macAddress = mkOption {
               type = str;
               description = "Device MAC address";
             };
+            vendor = mkOption {
+              type = str;
+              default = "";
+              description = "Hardware vendor (from OUI lookup)";
+            };
+            assignment = mkOption {
+              type = enum [
+                "dhcp"
+                "static"
+              ];
+              default = "dhcp";
+              description = "How the IP is assigned (dhcp = from DHCP server, static = configured on device)";
+            };
+            name = mkOption {
+              type = str;
+              default = "";
+              description = "Device name/hostname";
+            };
           };
         })
       );
       default = { };
-      description = "DHCP static leases by network name (e.g., mgmt, lan, iot)";
+      description = "Complete manifest of all known IP assignments by network";
     };
   };
 }

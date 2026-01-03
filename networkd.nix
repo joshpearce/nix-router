@@ -10,6 +10,10 @@ let
   hazmatVlan = "hazmat";
   guestVlan = "guest";
 
+  # Get DHCP reservations from ip_manifest (entries with assignment = "dhcp")
+  getDhcpLeases =
+    network: builtins.filter (e: e.assignment == "dhcp") (config.private.ip_manifest.${network} or [ ]);
+
 in
 {
   config = {
@@ -85,8 +89,9 @@ in
               DHCPServer = "yes";
             };
             dhcpServerConfig = {
-              PoolOffset = 21;
-              PoolSize = 200;
+              PoolOffset = 150;
+              PoolSize = 105;
+              DefaultLeaseTimeSec = 900;
               EmitDNS = "yes";
               DNS = "192.168.1.1";
               EmitNTP = "yes";
@@ -95,7 +100,7 @@ in
             dhcpServerStaticLeases = map (lease: {
               Address = lease.address;
               MACAddress = lease.macAddress;
-            }) config.private.dhcp.mgmt;
+            }) (getDhcpLeases "mgmt");
           };
           "50-vlan-lan" = {
             matchConfig.Name = "${lanVlan}";
@@ -105,8 +110,9 @@ in
               DHCPServer = "yes";
             };
             dhcpServerConfig = {
-              PoolOffset = 21;
-              PoolSize = 200;
+              PoolOffset = 150;
+              PoolSize = 105;
+              DefaultLeaseTimeSec = 900;
               EmitDNS = "yes";
               DNS = "10.13.84.1";
               EmitNTP = "yes";
@@ -115,7 +121,7 @@ in
             dhcpServerStaticLeases = map (lease: {
               Address = lease.address;
               MACAddress = lease.macAddress;
-            }) config.private.dhcp.lan;
+            }) (getDhcpLeases "lan");
           };
           "50-vlan-iot" = {
             matchConfig.Name = "${iotVlan}";
@@ -125,8 +131,9 @@ in
               DHCPServer = "yes";
             };
             dhcpServerConfig = {
-              PoolOffset = 21;
-              PoolSize = 200;
+              PoolOffset = 150;
+              PoolSize = 105;
+              DefaultLeaseTimeSec = 900;
               EmitDNS = "yes";
               DNS = "10.13.93.1";
               EmitNTP = "yes";
@@ -135,7 +142,7 @@ in
             dhcpServerStaticLeases = map (lease: {
               Address = lease.address;
               MACAddress = lease.macAddress;
-            }) config.private.dhcp.iot;
+            }) (getDhcpLeases "iot");
           };
           "50-vlan-guest" = {
             matchConfig.Name = "${guestVlan}";
@@ -145,8 +152,9 @@ in
               DHCPServer = "yes";
             };
             dhcpServerConfig = {
-              PoolOffset = 21;
-              PoolSize = 200;
+              PoolOffset = 150;
+              PoolSize = 105;
+              DefaultLeaseTimeSec = 900;
               EmitDNS = "yes";
               DNS = "${internetDnsServer}";
             };
@@ -159,8 +167,9 @@ in
               DHCPServer = "yes";
             };
             dhcpServerConfig = {
-              PoolOffset = 2;
-              PoolSize = 29;
+              PoolOffset = 150;
+              PoolSize = 105;
+              DefaultLeaseTimeSec = 900;
               EmitDNS = "yes";
               DNS = "10.13.86.1";
               EmitNTP = "yes";
@@ -175,8 +184,9 @@ in
               DHCPServer = "yes";
             };
             dhcpServerConfig = {
-              PoolOffset = 21;
-              PoolSize = 200;
+              PoolOffset = 150;
+              PoolSize = 105;
+              DefaultLeaseTimeSec = 900;
               EmitDNS = "yes";
               DNS = "${internetDnsServer}";
             };
