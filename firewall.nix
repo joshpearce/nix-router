@@ -1,4 +1,4 @@
-_:
+{ config, ... }:
 let
   wanIface = "enp1s0";
   lanIface = "enp2s0";
@@ -9,11 +9,31 @@ let
   hazmatVlan = "hazmat";
   guestVlan = "guest";
 
-  # Named hosts
-  homeAssistant = "10.13.93.50";
-  nas = "10.13.84.100";
-  cloudKey = "192.168.1.5";
-  blockedIotDevices = "10.13.93.16, 10.13.93.17, 10.13.93.14";
+  # IP lookup helpers - explicitly list networks for reliable NixOS module evaluation
+  allDevices =
+    (config.private.ip_manifest.mgmt or []) ++
+    (config.private.ip_manifest.lan or []) ++
+    (config.private.ip_manifest.iot or []) ++
+    (config.private.ip_manifest.hazmat or []);
+
+  findDevice = name:
+    let matches = builtins.filter (d: d.name == name) allDevices;
+    in if matches == [] then null else builtins.head matches;
+
+  getIp = name:
+    let device = findDevice name;
+    in if device == null
+       then builtins.throw "firewall.nix: Device '${name}' not found in ip_manifest"
+       else device.address;
+
+  getIps = names:
+    builtins.concatStringsSep ", " (map getIp names);
+
+  # Named hosts - looked up from ip_manifest
+  homeAssistant = getIp "homeassistant";
+  nas = getIp "nas";
+  cloudKey = getIp "CloudKey2";
+  blockedIotDevices = getIps [ "wiz1" "wiz2" "printer" ];
 
 in
 {
@@ -113,7 +133,7 @@ in
             }
 
             chain from-tailscale {
-              ip daddr { 192.168.1.156, 10.13.84.181, ${homeAssistant}, 10.13.84.104 } accept comment "Tailscale subnet routing"
+              ip daddr { ${getIp "NAS-IPMI"}, ${homeAssistant}, ${getIp "DESKTOP-7H3GTTS"} } accept comment "Tailscale subnet routing"
             }
 
             chain ts-forward {

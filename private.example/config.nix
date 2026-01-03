@@ -58,6 +58,13 @@ _: {
       mgmt = [
         # Infrastructure devices (UniFi, IPMI, etc.)
         {
+          address = "192.168.1.5";
+          macAddress = "aa:bb:cc:dd:ee:00";
+          vendor = "Ubiquiti";
+          assignment = "dhcp";
+          name = "CloudKey2";
+        }
+        {
           address = "192.168.1.10";
           macAddress = "aa:bb:cc:dd:ee:01";
           vendor = "Ubiquiti";
@@ -69,7 +76,7 @@ _: {
           macAddress = "aa:bb:cc:dd:ee:02";
           vendor = "Supermicro";
           assignment = "dhcp";
-          name = "ipmi";
+          name = "NAS-IPMI";
         }
         {
           address = "192.168.1.25";
@@ -101,6 +108,13 @@ _: {
           vendor = "Supermicro";
           assignment = "dhcp";
           name = "nas";
+        }
+        {
+          address = "10.13.84.104";
+          macAddress = "aa:bb:cc:dd:ee:14";
+          vendor = "QEMU";
+          assignment = "dhcp";
+          name = "DESKTOP-7H3GTTS";
         }
         # Client devices (phones, laptops) - name may be empty if unknown
         {
@@ -148,6 +162,20 @@ _: {
           vendor = "Brother";
           assignment = "dhcp";
           name = "printer";
+        }
+        {
+          address = "10.13.93.16";
+          macAddress = "aa:bb:cc:dd:ee:22";
+          vendor = "WiZ";
+          assignment = "dhcp";
+          name = "wiz1";
+        }
+        {
+          address = "10.13.93.17";
+          macAddress = "aa:bb:cc:dd:ee:23";
+          vendor = "WiZ";
+          assignment = "dhcp";
+          name = "wiz2";
         }
         {
           address = "10.13.93.50";

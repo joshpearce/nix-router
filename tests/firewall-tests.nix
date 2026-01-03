@@ -3,7 +3,26 @@
 # so we validate structure with grep instead of full syntax check
 { pkgs }:
 let
-  firewallConfig = import ../firewall.nix { };
+  mockConfig = {
+    private.ip_manifest = {
+      mgmt = [
+        { address = "192.168.1.5"; name = "CloudKey2"; macAddress = ""; vendor = ""; assignment = "dhcp"; }
+        { address = "192.168.1.156"; name = "NAS-IPMI"; macAddress = ""; vendor = ""; assignment = "dhcp"; }
+      ];
+      lan = [
+        { address = "10.13.84.100"; name = "nas"; macAddress = ""; vendor = ""; assignment = "dhcp"; }
+        { address = "10.13.84.104"; name = "DESKTOP-7H3GTTS"; macAddress = ""; vendor = ""; assignment = "dhcp"; }
+      ];
+      iot = [
+        { address = "10.13.93.50"; name = "homeassistant"; macAddress = ""; vendor = ""; assignment = "dhcp"; }
+        { address = "10.13.93.14"; name = "printer"; macAddress = ""; vendor = ""; assignment = "dhcp"; }
+        { address = "10.13.93.16"; name = "wiz1"; macAddress = ""; vendor = ""; assignment = "dhcp"; }
+        { address = "10.13.93.17"; name = "wiz2"; macAddress = ""; vendor = ""; assignment = "dhcp"; }
+      ];
+      hazmat = [];
+    };
+  };
+  firewallConfig = import ../firewall.nix { config = mockConfig; };
   inherit (firewallConfig.config.networking.nftables) ruleset;
 in
 pkgs.runCommand "firewall-tests" { } ''
