@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Monitor router for MAC→IP mapping changes.
+Monitor for MAC→IP mapping changes.
 Builds an initial manifest then reports any changes.
+Run this directly on the router.
 """
 
 import subprocess
@@ -10,10 +11,10 @@ import time
 from datetime import datetime
 
 
-def get_arp_table(host="nix-router"):
-    """Fetch ARP table from router via SSH."""
+def get_arp_table():
+    """Fetch ARP table locally."""
     result = subprocess.run(
-        ["ssh", host, "ip", "neigh", "show"],
+        ["ip", "neigh", "show"],
         capture_output=True,
         text=True,
     )
@@ -58,11 +59,11 @@ def format_entry(mac, info):
     return f"{mac} -> {info['ip']} ({info['interface']}, {info['state']})"
 
 
-def monitor(host="nix-router", interval=5):
+def monitor(interval=5):
     """Monitor for changes in MAC→IP mappings."""
-    print(f"Connecting to {host} to build initial manifest...")
+    print("Building initial manifest...")
 
-    output = get_arp_table(host)
+    output = get_arp_table()
     if output is None:
         sys.exit(1)
 
@@ -77,7 +78,7 @@ def monitor(host="nix-router", interval=5):
         while True:
             time.sleep(interval)
 
-            output = get_arp_table(host)
+            output = get_arp_table()
             if output is None:
                 continue
 
@@ -115,9 +116,8 @@ def monitor(host="nix-router", interval=5):
 
 
 if __name__ == "__main__":
-    host = sys.argv[1] if len(sys.argv) > 1 else "nix-router"
-    interval = int(sys.argv[2]) if len(sys.argv) > 2 else 5
+    interval = int(sys.argv[1]) if len(sys.argv) > 1 else 5
 
-    print(f"Monitoring {host} every {interval}s for IP changes...")
+    print(f"Monitoring ARP table every {interval}s for IP changes...")
     print("Press Ctrl+C to stop.\n")
-    monitor(host, interval)
+    monitor(interval)
