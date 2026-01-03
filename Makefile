@@ -17,13 +17,14 @@ PRIVATE_DIR := private
 PRIVATE_CONFIG := $(PRIVATE_DIR)/config.nix
 PRIVATE_CONFIG_AGE := $(PRIVATE_DIR)/config.nix.age
 
-.PHONY: decrypt encrypt verify build switch test clean help init check check-verbose lint
+.PHONY: decrypt encrypt verify build switch test clean help init check check-verbose lint diff-config
 
 help:
 	@echo "Available targets:"
 	@echo "  init     - Initialize private/ directory and install pre-commit hooks"
 	@echo "  decrypt  - Decrypt private/config.nix.age to private/config.nix"
 	@echo "  encrypt  - Encrypt private/config.nix to private/config.nix.age"
+	@echo "  diff-config - Show changes to private/config.nix before encrypting"
 	@echo "  verify   - Verify encrypted file matches decrypted"
 	@echo "  build    - Build the NixOS configuration"
 	@echo "  switch   - Switch to the new configuration"
@@ -67,6 +68,19 @@ encrypt:
 		echo "Run 'make init' to create private/ from the example"; \
 		exit 1; \
 	fi
+
+# Show diff between encrypted version and current edits
+diff-config:
+	@if [ ! -f $(PRIVATE_CONFIG) ]; then \
+		echo "ERROR: $(PRIVATE_CONFIG) not found"; \
+		exit 1; \
+	fi; \
+	if [ ! -f $(PRIVATE_CONFIG_AGE) ]; then \
+		echo "No $(PRIVATE_CONFIG_AGE) - showing entire file as new"; \
+		cat $(PRIVATE_CONFIG); \
+		exit 0; \
+	fi; \
+	age -d -i $(AGE_KEY) $(PRIVATE_CONFIG_AGE) 2>/dev/null | diff -u --color=auto - $(PRIVATE_CONFIG) || true
 
 # Verify private/config.nix.age matches private/config.nix (for pre-commit hook)
 verify:
