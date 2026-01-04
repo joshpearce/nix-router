@@ -50,8 +50,6 @@
       enableSsh = true;
       subnetRoutes = [
         "192.168.1.0/24"
-        #"10.13.84.181/32"
-        #"10.13.93.50/32"
         "10.13.0.0/16"
       ];
       tags = [ "tag:router" ];
@@ -92,6 +90,28 @@
     deadnix
     age
   ];
+
+  systemd.services.nix-gc-generations = {
+    description = "Nix garbage collection (keep last 10 generations)";
+    script = ''
+      ${pkgs.nix}/bin/nix-env --delete-generations +10 -p /nix/var/nix/profiles/system
+      ${pkgs.nix}/bin/nix-collect-garbage
+    '';
+    serviceConfig.Type = "oneshot";
+  };
+
+  systemd.timers.nix-gc-generations = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "weekly";
+      Persistent = true;
+    };
+  };
+
+  nix.optimise = {
+    automatic = true;
+    dates = [ "weekly" ];
+  };
 
   programs.nix-ld.enable = true;
 
