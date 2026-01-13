@@ -23,6 +23,8 @@ let
         "log2:NFLOG,base1:BASE,ifi1:IFINDEX,ip2str1:IP2STR,print1:PRINTPKT,syslog2:SYSLOG"
         # Encrypted DNS logging (NFLOG group 3) - DoT/DoH detection from firewall.nix forward chain
         "log3:NFLOG,base1:BASE,ifi1:IFINDEX,ip2str1:IP2STR,print1:PRINTPKT,syslog3:SYSLOG"
+        # rp_filter audit logging (NFLOG group 4) - detects weak ES model traffic
+        "log4:NFLOG,base1:BASE,ifi1:IFINDEX,ip2str1:IP2STR,print1:PRINTPKT,syslog4:SYSLOG"
         # Connection flow logging (conntrack) - automatic, no nftables rules needed
         "ct1:NFCT,ip2str1:IP2STR,print1:PRINTFLOW,syslog1:SYSLOG"
       ];
@@ -36,6 +38,9 @@ let
     log3 = {
       group = 3;
     }; # NFLOG group 3 - encrypted DNS (DoT/DoH) logging
+    log4 = {
+      group = 4;
+    }; # NFLOG group 4 - rp_filter audit logging
     ct1 = { }; # NFCT conntrack (uses defaults)
 
     # LOCAL1 for flow logs and general packet logs (consumed by Vector prep_for_metric)
@@ -51,6 +56,11 @@ let
     # LOCAL3 for encrypted DNS logs (consumed by Vector parse_encrypted_dns)
     syslog3 = {
       facility = "LOG_LOCAL3";
+      level = "LOG_INFO";
+    };
+    # LOCAL4 for rp_filter audit logs (consumed by Vector parse_rp_audit)
+    syslog4 = {
+      facility = "LOG_LOCAL4";
       level = "LOG_INFO";
     };
   };

@@ -63,6 +63,26 @@ in
           }
 
           table ip filter {
+            chain rp_audit {
+              type filter hook prerouting priority -300; policy accept;
+
+              # Log packets arriving on WAN addressed to internal IPs (would fail strict rp_filter)
+              iifname "${wanIface}" ip daddr { 192.168.1.1, 10.13.84.1, 10.13.86.1, 10.13.93.1, 10.13.83.1, 10.13.99.1, 100.114.201.26 } log group 4 prefix "RP-AUDIT-WAN: "
+
+              # Log packets arriving on internal interfaces addressed to WAN IP
+              iifname { "${lanIface}", "${lanVlan}", "${k8sVlan}", "${iotVlan}", "${guestVlan}", "${hazmatVlan}" } ip daddr 99.85.28.23 log group 4 prefix "RP-AUDIT-INT: "
+
+              # Log packets arriving on one internal interface addressed to another's IP
+              iifname "${lanIface}" ip daddr { 10.13.84.1, 10.13.86.1, 10.13.93.1, 10.13.83.1, 10.13.99.1 } log group 4 prefix "RP-AUDIT-CROSS: "
+              iifname "${lanVlan}" ip daddr { 192.168.1.1, 10.13.86.1, 10.13.93.1, 10.13.83.1, 10.13.99.1 } log group 4 prefix "RP-AUDIT-CROSS: "
+              iifname "${k8sVlan}" ip daddr { 192.168.1.1, 10.13.84.1, 10.13.93.1, 10.13.83.1, 10.13.99.1 } log group 4 prefix "RP-AUDIT-CROSS: "
+              iifname "${iotVlan}" ip daddr { 192.168.1.1, 10.13.84.1, 10.13.86.1, 10.13.83.1, 10.13.99.1 } log group 4 prefix "RP-AUDIT-CROSS: "
+              iifname "${guestVlan}" ip daddr { 192.168.1.1, 10.13.84.1, 10.13.86.1, 10.13.93.1, 10.13.99.1 } log group 4 prefix "RP-AUDIT-CROSS: "
+              iifname "${hazmatVlan}" ip daddr { 192.168.1.1, 10.13.84.1, 10.13.86.1, 10.13.93.1, 10.13.83.1 } log group 4 prefix "RP-AUDIT-CROSS: "
+
+              # Tailscale logged separately - its traffic patterns may legitimately cross interfaces
+              iifname "${tsIface}" ip daddr { 192.168.1.1, 10.13.84.1, 10.13.86.1, 10.13.93.1, 10.13.83.1, 10.13.99.1, 99.85.28.23 } log group 4 prefix "RP-AUDIT-TS: "
+            }
             chain trace_chain {
               type filter hook prerouting priority -1;
               iifname { "${tsIface}" } nftrace set 0 comment "set to 1 to enable"

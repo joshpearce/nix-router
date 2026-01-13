@@ -5,6 +5,7 @@ let
   LOCAL1 = "17"; # Flow logs (conntrack) + packet logs
   LOCAL2 = "18"; # DNS redirect logs
   LOCAL3 = "19"; # Encrypted DNS (DoT/DoH) logs
+  LOCAL4 = "20"; # rp_filter audit logs
 in
 {
   config = {
@@ -42,6 +43,11 @@ in
               type = "filter";
               inputs = [ "journald" ];
               condition = ''.SYSLOG_FACILITY == "${LOCAL3}"'';
+            };
+            filter_rp_audit_logs = {
+              type = "filter";
+              inputs = [ "journald" ];
+              condition = ''.SYSLOG_FACILITY == "${LOCAL4}"'';
             };
             parse_ntp_redirect = {
               type = "remap";
@@ -86,6 +92,26 @@ in
                 .spt = kvs.SPT
                 .dpt = kvs.DPT
                 .prefix = "encrypted-dns"
+              '';
+            };
+            parse_rp_audit = {
+              type = "remap";
+              inputs = [ "filter_rp_audit_logs" ];
+              source = ''
+                # Parse: RP-AUDIT-WAN: IN=enp1s0 OUT= MAC=... SRC=x.x.x.x DST=192.168.1.1 ... PROTO=TCP SPT=12345 DPT=22
+                kvs, err = parse_key_value(.message, field_delimiter: " ", accept_standalone_key: true)
+                .iface = kvs.IN
+                .src = kvs.SRC
+                .dst = kvs.DST
+                .proto = kvs.PROTO
+                .spt = kvs.SPT
+                .dpt = kvs.DPT
+                # Extract audit type from prefix
+                .audit_type = if contains(string!(.message), "RP-AUDIT-WAN:") { "wan-to-internal" }
+                  else if contains(string!(.message), "RP-AUDIT-INT:") { "internal-to-wan" }
+                  else if contains(string!(.message), "RP-AUDIT-CROSS:") { "cross-vlan" }
+                  else if contains(string!(.message), "RP-AUDIT-TS:") { "tailscale" }
+                  else { "unknown" }
               '';
             };
             prep_for_metric = {
@@ -244,6 +270,25 @@ in
               labels = {
                 app = "router";
                 netlog = "encrypted-dns";
+              };
+            };
+            loki_rp_audit = {
+              type = "loki";
+              inputs = [ "parse_rp_audit" ];
+              encoding.codec = "json";
+              encoding.only_fields = [
+                "src"
+                "dst"
+                "iface"
+                "proto"
+                "spt"
+                "dpt"
+                "audit_type"
+              ];
+              inherit (cfg.loki) endpoint;
+              labels = {
+                app = "router";
+                netlog = "rp-audit";
               };
             };
           };
