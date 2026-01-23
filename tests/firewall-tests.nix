@@ -8,14 +8,14 @@ let
       mgmt = [
         {
           address = "192.168.1.5";
-          name = "CloudKey2";
+          name = "cloudkey2";
           macAddress = "";
           vendor = "";
           assignment = "dhcp";
         }
         {
           address = "192.168.1.156";
-          name = "NAS-IPMI";
+          name = "nas-ipmi";
           macAddress = "";
           vendor = "";
           assignment = "dhcp";
@@ -31,7 +31,7 @@ let
         }
         {
           address = "10.13.84.104";
-          name = "WINDOWS-VM1";
+          name = "windows-vm1";
           macAddress = "";
           vendor = "";
           assignment = "dhcp";
@@ -54,14 +54,14 @@ let
         }
         {
           address = "10.13.93.16";
-          name = "wiz1";
+          name = "wiz-dimmable-white-1";
           macAddress = "";
           vendor = "";
           assignment = "dhcp";
         }
         {
           address = "10.13.93.17";
-          name = "wiz2";
+          name = "wiz-dimmable-white-2";
           macAddress = "";
           vendor = "";
           assignment = "dhcp";

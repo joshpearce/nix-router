@@ -38,10 +38,10 @@ let
   # Named hosts - looked up from ip_manifest
   homeAssistant = getIp "homeassistant";
   nas = getIp "nas";
-  cloudKey = getIp "CloudKey2";
+  cloudKey = getIp "cloudkey2";
   blockedIotDevices = getIps [
-    "wiz1"
-    "wiz2"
+    "wiz-dimmable-white-1"
+    "wiz-dimmable-white-2"
     "printer"
   ];
 
@@ -143,7 +143,7 @@ in
             }
 
             chain from-tailscale {
-              ip daddr { ${getIp "NAS-IPMI"}, ${homeAssistant}, ${getIp "WINDOWS-VM1"} } accept comment "Tailscale subnet routing"
+              ip daddr { ${getIp "nas-ipmi"}, ${homeAssistant}, ${getIp "windows-vm1"} } accept comment "Tailscale subnet routing"
             }
 
             chain ts-forward {

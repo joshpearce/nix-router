@@ -37,6 +37,12 @@
     builtins.length parts == 4
     && (o1 == 10 || (o1 == 172 && o2 >= 16 && o2 <= 31) || (o1 == 192 && o2 == 168));
 
+  # Validate DNS hostname label per RFC 1123
+  # - Lowercase letters, digits, hyphens only
+  # - Must start and end with letter or digit
+  # - Max 63 characters
+  isValidDnsName = name: builtins.match "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$" name != null;
+
   # Validate DHCP pool configuration
   # Pool should not include gateway (.1) or reserved range
   validateDhcpPool =

@@ -119,12 +119,12 @@ test: decrypt
 	nixos-rebuild test --flake .#router --override-input private path:./$(PRIVATE_DIR)
 
 # Run all flake checks
-check:
-	nix flake check
+check: decrypt
+	nix flake check --override-input private path:./$(PRIVATE_DIR)
 
 # Run flake checks with verbose output (shows build logs even if cached)
 check-verbose:
-	@nix flake check
+	@nix flake check --override-input private path:./$(PRIVATE_DIR)
 	@echo ""
 	@echo "=== Test Logs ==="
 	@for check in lib-tests shell-tests firewall-tests dns-dhcp-tests; do \

@@ -8,6 +8,7 @@ This is the NixOS-based router that I use at home. Sharing in case it helps anyo
 - **Stateful firewall** - nftables-based packet filtering with inter-VLAN access controls
 - **BGP routing** - FRRouting integration for dynamic route exchange with Kubernetes
 - **Tailscale VPN** - OAuth-based authentication with subnet routing for remote access
+- **Local DNS resolution** - Device names from ip_manifest resolve as `<name>.home` (e.g., `nas.home`, `homeassistant.home`)
 - **DNS proxy** - Centralized DNS with upstream fallback (supports DoH)
 - **Dynamic DNS** - Automatic AWS Route53 updates when WAN IP changes
 - **Monitoring & observability** - Prometheus node-exporter
@@ -233,3 +234,31 @@ Tests run at build time via `pkgs.runCommand` and are integrated with `nix flake
 | `ulogd.nix` | Netfilter connection tracking configuration |
 | `network-irq.nix` | Network interface IRQ tuning |
 
+
+## Local DNS Resolution
+
+Devices in the `ip_manifest` with a `name` field are automatically resolvable via DNS using the `.home` suffix. For example:
+
+```bash
+$ dig nas.home +short
+10.13.84.100
+
+$ dig homeassistant.home +short
+10.13.93.50
+```
+
+### How It Works
+
+1. `dnsproxy.nix` reads all entries from `config.private.ip_manifest`
+2. Entries with valid DNS names are written to `/etc/hosts.local`
+3. dnsproxy serves these records via the `--hosts-files` option
+4. All VLANs use the router as their DNS server
+
+### DNS Name Validation
+
+Device names must be valid DNS labels per RFC 1123:
+- Lowercase letters, digits, and hyphens only
+- Must start and end with a letter or digit
+- Maximum 63 characters
+
+Invalid names will cause the build to fail with a clear error message listing the problematic entries. The validation function is defined in `tests/lib.nix` as `isValidDnsName`.
