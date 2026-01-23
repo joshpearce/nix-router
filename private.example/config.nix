@@ -51,9 +51,25 @@ _: {
     };
 
     # Complete manifest of all known IP assignments by network.
-    # - assignment = "dhcp": Device uses DHCP; router provides a static lease (reservation)
-    # - assignment = "static": Device has a static IP configured on the device itself
-    # Devices with assignment="dhcp" are used by networkd.nix for DHCP reservations.
+    #
+    # Fields:
+    #   - address: IP address
+    #   - macAddress: MAC address (used for DHCP reservations)
+    #   - vendor: Device manufacturer (informational)
+    #   - assignment: "dhcp" (router provides lease) or "static" (device configures itself)
+    #   - name: DNS hostname (optional, but enables local DNS resolution)
+    #
+    # DNS Resolution:
+    #   Devices with a valid 'name' are resolvable as <name>.home (e.g., nas.home).
+    #   Names must be valid DNS labels per RFC 1123:
+    #     - Lowercase letters, digits, and hyphens only
+    #     - Must start and end with a letter or digit
+    #     - Maximum 63 characters
+    #   Invalid names will cause the build to fail with an error message.
+    #
+    # DHCP Reservations:
+    #   Devices with assignment="dhcp" are used by networkd.nix for DHCP reservations.
+    #
     ip_manifest = {
       mgmt = [
         # Infrastructure devices (UniFi, IPMI, etc.)
@@ -62,7 +78,7 @@ _: {
           macAddress = "aa:bb:cc:dd:ee:00";
           vendor = "Ubiquiti";
           assignment = "dhcp";
-          name = "CloudKey2";
+          name = "cloudkey2";
         }
         {
           address = "192.168.1.10";
@@ -76,7 +92,7 @@ _: {
           macAddress = "aa:bb:cc:dd:ee:02";
           vendor = "Supermicro";
           assignment = "dhcp";
-          name = "NAS-IPMI";
+          name = "nas-ipmi";
         }
         {
           address = "192.168.1.25";
@@ -114,7 +130,7 @@ _: {
           macAddress = "aa:bb:cc:dd:ee:14";
           vendor = "QEMU";
           assignment = "dhcp";
-          name = "WINDOWS-VM1";
+          name = "windows-vm1";
         }
         # Client devices (phones, laptops) - name may be empty if unknown
         {
@@ -168,14 +184,14 @@ _: {
           macAddress = "aa:bb:cc:dd:ee:22";
           vendor = "WiZ";
           assignment = "dhcp";
-          name = "wiz1";
+          name = "wiz-living-room";
         }
         {
           address = "10.13.93.17";
           macAddress = "aa:bb:cc:dd:ee:23";
           vendor = "WiZ";
           assignment = "dhcp";
-          name = "wiz2";
+          name = "wiz-bedroom";
         }
         {
           address = "10.13.93.50";
