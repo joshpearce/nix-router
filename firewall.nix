@@ -42,7 +42,6 @@ let
   blockedIotDevices = getIps [
     "wiz-dimmable-white-1"
     "wiz-dimmable-white-2"
-    "printer"
   ];
 
 in
@@ -82,6 +81,7 @@ in
               iifname { "${wanIface}", "${tsIface}" } icmp type { destination-unreachable, time-exceeded } counter accept comment "Allow ICMP errors"
               iifname { "${wanIface}" } tcp dport { 8044 } counter drop comment "Temporarily port 8044 for ssh"
               iifname { "${iotVlan}" } ip saddr { ${homeAssistant} } udp dport { mdns } counter accept comment "multicast for media devices, printers"
+              iifname { "${hazmatVlan}" } udp dport { mdns } counter accept comment "Allow mDNS from hazmat for Bonjour printer discovery"
               iifname { "${iotVlan}" } udp dport { 53, 123 } counter accept comment "Allow dns and time from iot to local dns proxy and chrony servers"
               iifname { "${hazmatVlan}", "${iotVlan}", "${guestVlan}" } udp dport 67 accept comment "Allow DHCP Discover and Request message to reach the router"
               iifname "${wanIface}" counter drop comment "Drop all other unsolicited traffic from wan"
@@ -139,6 +139,7 @@ in
             }
 
             chain from-hazmat {
+              ip daddr ${getIp "printer"} oifname { "${lanVlan}" } tcp dport { 443, 515, 631, 9100 } accept comment "Hazmat to Brother printer (IPPS, LPD, IPP, RAW)"
               oifname { "${wanIface}" } accept comment "Hazmat to WAN only"
             }
 
