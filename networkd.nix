@@ -108,6 +108,8 @@ in
             DHCP = "no";
             networkConfig = {
               DHCPServer = "yes";
+              LinkLocalAddressing = "ipv6";
+              IPv6AcceptRA = false;
             };
             dhcpServerConfig = {
               PoolOffset = 150;

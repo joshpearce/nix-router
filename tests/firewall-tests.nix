@@ -122,6 +122,12 @@ pkgs.runCommand "firewall-tests" { } ''
   grep -q 'iifname.*enp1s0' ruleset.nft || { echo "FAIL: Missing WAN interface rules"; exit 1; }
   echo "  WAN interface configured"
 
+  # Check IPv6 link-local rules for LAN VLAN
+  echo "Checking IPv6 link-local rules..."
+  grep -q "icmpv6 type.*nd-neighbor-solicit" ruleset.nft || { echo "FAIL: Missing NDP rules in ip6 filter"; exit 1; }
+  grep -q "icmpv6 type.*mld-listener" ruleset.nft || { echo "FAIL: Missing MLD rules in ip6 filter"; exit 1; }
+  echo "  IPv6 link-local rules present"
+
   echo ""
   echo "Firewall validation passed!"
   touch $out

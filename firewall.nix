@@ -182,6 +182,9 @@ in
           table ip6 filter {
             chain input {
               type filter hook input priority 0; policy drop;
+              iifname { "${lanVlan}" } icmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-solicit } accept comment "Allow NDP on LAN"
+              iifname { "${lanVlan}" } icmpv6 type { mld-listener-query, mld-listener-report, mld2-listener-report, mld-listener-done } accept comment "Allow MLD on LAN"
+              iifname { "${lanVlan}" } icmpv6 type { echo-request } limit rate 10/second accept comment "Allow IPv6 ping on LAN"
             }
             chain forward {
               type filter hook forward priority 0; policy drop;
