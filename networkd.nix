@@ -71,6 +71,15 @@ in
             matchConfig.Name = "${wanIface}";
             DHCP = "ipv4";
             dns = [ "" ];
+            # This is an IPv4-only router. Upstream advertises an fdff::/64 ULA
+            # via RA; accepting it gives us a global-scope SLAAC address with no
+            # working v6 route, so any AAAA lookup fails with instant ENETUNREACH.
+            # Refuse RAs and all IPv6 autoconfiguration on the WAN.
+            networkConfig = {
+              IPv6AcceptRA = false;
+              DHCPPrefixDelegation = false;
+              LinkLocalAddressing = "ipv4";
+            };
           };
           "40-enp2s0" = {
             matchConfig.Name = "${lanIface}";
