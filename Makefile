@@ -6,6 +6,7 @@
 #   make verify   - Verify encrypted file matches decrypted (for pre-commit)
 #   make build    - Build the NixOS configuration
 #   make switch   - Switch to the new configuration
+#   make boot     - Set next boot to new configuration
 #   make clean    - Remove decrypted config
 
 # Configuration - update these paths if needed
@@ -17,7 +18,7 @@ PRIVATE_DIR := private
 PRIVATE_CONFIG := $(PRIVATE_DIR)/config.nix
 PRIVATE_CONFIG_AGE := $(PRIVATE_DIR)/config.nix.age
 
-.PHONY: decrypt encrypt verify build switch test clean help init check check-verbose lint diff-config
+.PHONY: decrypt encrypt verify build switch test clean help init boot check check-verbose lint diff-config
 
 help:
 	@echo "Available targets:"
@@ -27,6 +28,7 @@ help:
 	@echo "  diff-config - Show changes to private/config.nix before encrypting"
 	@echo "  verify   - Verify encrypted file matches decrypted"
 	@echo "  build    - Build the NixOS configuration"
+	@echo "  boot     - Set to boot to new configuration"
 	@echo "  switch   - Switch to the new configuration"
 	@echo "  test     - Test the new configuration (nixos-rebuild test)"
 	@echo "  check    - Run all tests via nix flake check"
@@ -114,6 +116,9 @@ build: decrypt
 switch: decrypt
 	nixos-rebuild switch --flake .#router --override-input private path:./$(PRIVATE_DIR)
 
+# Set to boot to new configuration
+boot: decrypt
+	nixos-rebuild boot --flake .#router --override-input private path:./$(PRIVATE_DIR)
 # Test the new configuration (activates without adding to bootloader)
 test: decrypt
 	nixos-rebuild test --flake .#router --override-input private path:./$(PRIVATE_DIR)
