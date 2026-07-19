@@ -85,6 +85,7 @@
     nixfmt-rfc-style
     nodejs_24
     git
+    tmux
     uv
     statix
     deadnix
