@@ -50,7 +50,17 @@ init:
 # Decrypt private/config.nix.age to private/config.nix
 decrypt:
 	@if [ -f $(PRIVATE_CONFIG_AGE) ]; then \
-		age -d -i $(AGE_KEY) $(PRIVATE_CONFIG_AGE) > $(PRIVATE_CONFIG); \
+		set -eu; \
+		umask 077; \
+		tmp=$$(mktemp "$(PRIVATE_DIR)/.config.nix.XXXXXX"); \
+		trap 'test -z "$$tmp" || rm -f "$$tmp"' EXIT HUP INT TERM; \
+		if ! age -d -i $(AGE_KEY) $(PRIVATE_CONFIG_AGE) > "$$tmp"; then \
+			echo "ERROR: failed to decrypt $(PRIVATE_CONFIG_AGE); existing $(PRIVATE_CONFIG) preserved" >&2; \
+			exit 1; \
+		fi; \
+		chmod 0600 "$$tmp"; \
+		mv -f "$$tmp" $(PRIVATE_CONFIG); \
+		tmp=; \
 		echo "✓ Decrypted $(PRIVATE_CONFIG)"; \
 	else \
 		echo "No $(PRIVATE_CONFIG_AGE) found."; \

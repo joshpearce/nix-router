@@ -79,9 +79,11 @@ agenix -e aws-domain-mgr-secret.age
 
 ### 4. Build and Deploy
 
-```bash
-make switch
-```
+Production does not use `deploy-flake`. Make changes in the local checkout,
+validate them, commit, and push. Then update the clean checkout on the router and
+run the Makefile inside a named tmux session so the build and activation survive
+an SSH, Tailscale, or routing interruption. See
+[docs/router-deployment.md](docs/router-deployment.md).
 
 ## Project Structure
 

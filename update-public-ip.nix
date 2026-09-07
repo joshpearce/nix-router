@@ -88,7 +88,6 @@ in
           wants = [ "updateRoute53Timer.timer" ];
           description = "Update public IP in Route53 DNS record";
           environment = {
-            HC_PING_KEY = config.private.healthchecks.pingKey;
             CHECK_SLUG = config.private.healthchecks.checkSlug;
           };
           serviceConfig = {
@@ -96,7 +95,11 @@ in
             User = config.private.user.name;
             Group = "users";
           };
-          script = "${lib.getExe pkgs.runitor} ${lib.getExe update_ip}";
+          script = ''
+            export HC_PING_KEY="$(cat ${config.age.secrets.healthchecks-io-ping-key.path})"
+            test -n "$HC_PING_KEY"
+            exec ${lib.getExe pkgs.runitor} ${lib.getExe update_ip}
+          '';
         };
       };
       timers = {
