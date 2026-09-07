@@ -38,6 +38,11 @@ fi
 
 PATH="$fixture/bin:$PATH" make "${make_args[@]}"
 grep -Fxq 'replacement config' "$fixture/private/config.nix"
-[[ $(stat -f '%Lp' "$fixture/private/config.nix" 2>/dev/null || stat -c '%a' "$fixture/private/config.nix") == 600 ]]
+if [[ $(uname -s) == Darwin ]]; then
+  mode=$(stat -f '%Lp' "$fixture/private/config.nix")
+else
+  mode=$(stat -c '%a' "$fixture/private/config.nix")
+fi
+[[ $mode == 600 ]]
 
 echo 'Makefile decrypt tests passed'
