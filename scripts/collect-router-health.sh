@@ -38,16 +38,17 @@ dns_metric() {
   kind="$1"
   name="$2"
   expected="$3"
-  response="$(dig +time=2 +tries=1 +noall +answer +stats @127.0.0.1 A "$name" 2>/dev/null)" || response=""
-  answer="$(printf '%s\n' "$response" | awk '$1 !~ /^;/ && $4 == "A" { print $5; exit }')"
-  query_milliseconds="$(printf '%s\n' "$response" | awk '/Query time:/ { print $4; exit }')"
+  started_nanoseconds="$(date +%s%N)"
+  response="$(dig +time=2 +tries=1 +short "@${DNS_SERVER:-10.13.84.1}" A "$name" 2>/dev/null)" || response=""
+  finished_nanoseconds="$(date +%s%N)"
+  answer="$(printf '%s\n' "$response" | awk 'NF { print; exit }')"
   if [ -n "$answer" ] && { [ -z "$expected" ] || [ "$answer" = "$expected" ]; }; then
     success=1
   else
     success=0
   fi
   metric "homelab_router_dns_query_success{host=\"nix-router\",kind=\"${kind}\"}" "$success"
-  metric "homelab_router_dns_query_duration_seconds{host=\"nix-router\",kind=\"${kind}\"}" "$(awk -v milliseconds="${query_milliseconds:-0}" 'BEGIN { printf "%.3f", milliseconds / 1000 }')"
+  metric "homelab_router_dns_query_duration_seconds{host=\"nix-router\",kind=\"${kind}\"}" "$(awk -v nanoseconds="$((finished_nanoseconds - started_nanoseconds))" 'BEGIN { printf "%.6f", nanoseconds / 1000000000 }')"
 }
 
 printf '%s\n' \
