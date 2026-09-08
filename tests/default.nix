@@ -5,4 +5,5 @@
   shell-tests = import ./shell-tests.nix { inherit pkgs; };
   firewall-tests = import ./firewall-tests.nix { inherit pkgs; };
   dns-dhcp-tests = import ./dns-dhcp-tests.nix { inherit lib pkgs; };
+  router-health-tests = import ./router-health-tests.nix { inherit pkgs; };
 }
