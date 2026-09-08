@@ -2,6 +2,7 @@
 set -u
 
 textfile_directory="${TEXTFILE_DIRECTORY:-/var/lib/node-exporter/textfile}"
+install -d -m 0755 "$textfile_directory"
 output="${textfile_directory}/router-health.prom"
 temporary="$(mktemp "${textfile_directory}/.router-health.XXXXXX")"
 trap 'rm -f "$temporary"' EXIT HUP INT TERM
