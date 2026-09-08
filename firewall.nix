@@ -130,7 +130,7 @@ in
             chain from-iot {
               ip saddr { ${blockedIotDevices} } oifname { "${wanIface}" } counter drop comment "Block select IoT devices from internet"
               oifname { "${wanIface}" } accept comment "IoT to WAN"
-              ip saddr ${homeAssistant} ip daddr ${nas} tcp dport { 22, 3493, 5432 } accept comment "HA to NAS (ssh, NUT, postgres)"
+              ip saddr ${homeAssistant} ip daddr ${nas} tcp dport { 22, 445, 3493, 5432 } accept comment "HA to NAS (ssh, SMB backup, NUT, postgres)"
               ip saddr ${homeAssistant} ip daddr ${cloudKey} tcp dport { 443 } accept comment "HA to CloudKey"
             }
 

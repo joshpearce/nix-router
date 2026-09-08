@@ -122,6 +122,15 @@ pkgs.runCommand "firewall-tests" { } ''
   grep -q 'iifname.*enp1s0' ruleset.nft || { echo "FAIL: Missing WAN interface rules"; exit 1; }
   echo "  WAN interface configured"
 
+  # Home Assistant must reach only the reviewed NAS services from the IoT VLAN.
+  # In particular, SMB backup access is restricted to the exact HA and NAS
+  # addresses rather than allowing the IoT subnet as a whole.
+  grep -Fq 'ip saddr 10.13.93.50 ip daddr 10.13.84.100 tcp dport { 22, 445, 3493, 5432 } accept comment "HA to NAS (ssh, SMB backup, NUT, postgres)"' ruleset.nft || {
+    echo "FAIL: Missing exact Home Assistant to NAS service allowlist"
+    exit 1
+  }
+  echo "  Home Assistant NAS access is address- and port-scoped"
+
   echo ""
   echo "Firewall validation passed!"
   touch $out
