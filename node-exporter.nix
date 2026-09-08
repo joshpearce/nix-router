@@ -9,7 +9,7 @@ let
   routerHealthCollector = pkgs.writeShellApplication {
     name = "collect-router-health";
     runtimeInputs = with pkgs; [
-      bind
+      bind.dnsutils
       coreutils
       gawk
       gnugrep

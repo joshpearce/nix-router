@@ -1,6 +1,7 @@
 { pkgs }:
 pkgs.runCommand "router-health-tests" { nativeBuildInputs = [ pkgs.shellcheck ]; } ''
   shellcheck ${../scripts/collect-router-health.sh}
+  test -x ${pkgs.bind.dnsutils}/bin/dig
   grep -q 'textfileDirectory = "/var/lib/node-exporter/textfile"' ${../node-exporter.nix}
   grep -q -- '--collector.textfile.directory=' ${../node-exporter.nix}
   grep -q 'PUBLIC_DNS_NAME=home.' ${../node-exporter.nix}
