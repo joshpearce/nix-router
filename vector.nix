@@ -38,6 +38,16 @@ in
               inputs = [ "journald" ];
               condition = ''.SYSLOG_FACILITY == "${LOCAL2}"'';
             };
+            filter_dns_redirect = {
+              type = "filter";
+              inputs = [ "filter_redirect_logs" ];
+              condition = ''starts_with(to_string(.message) ?? "", "DNS-REDIRECT: ")'';
+            };
+            filter_ntp_redirect = {
+              type = "filter";
+              inputs = [ "filter_redirect_logs" ];
+              condition = ''starts_with(to_string(.message) ?? "", "NTP-REDIRECT: ")'';
+            };
             filter_encrypted_dns_logs = {
               type = "filter";
               inputs = [ "journald" ];
@@ -45,9 +55,9 @@ in
             };
             parse_ntp_redirect = {
               type = "remap";
-              inputs = [ "filter_redirect_logs" ];
+              inputs = [ "filter_ntp_redirect" ];
               source = ''
-                # Parse: NTP-REDIRECT: IN=iot OUT= MAC=... SRC=10.13.93.50 DST=8.8.8.8 ... PROTO=UDP SPT=12345 DPT=53
+                # Parse: NTP-REDIRECT: IN=iot OUT= MAC=... SRC=10.13.93.50 DST=8.8.8.8 ... PROTO=UDP SPT=12345 DPT=123
                 kvs, err = parse_key_value(.message, field_delimiter: " ", accept_standalone_key: true)
                 .iface = kvs.IN
                 .src = kvs.SRC
@@ -60,7 +70,7 @@ in
             };
             parse_dns_redirect = {
               type = "remap";
-              inputs = [ "filter_redirect_logs" ];
+              inputs = [ "filter_dns_redirect" ];
               source = ''
                 # Parse: DNS-REDIRECT: IN=iot OUT= MAC=... SRC=10.13.93.50 DST=8.8.8.8 ... PROTO=UDP SPT=12345 DPT=53
                 kvs, err = parse_key_value(.message, field_delimiter: " ", accept_standalone_key: true)
@@ -180,6 +190,91 @@ in
               '';
             };
           };
+          tests = [
+            {
+              name = "DNS redirects are emitted only as DNS events";
+              inputs = [
+                {
+                  insert_at = "filter_redirect_logs";
+                  type = "log";
+                  log_fields = {
+                    SYSLOG_FACILITY = LOCAL2;
+                    message = "DNS-REDIRECT: IN=iot OUT= SRC=10.13.93.50 DST=8.8.8.8 PROTO=UDP SPT=12345 DPT=53";
+                  };
+                }
+              ];
+              outputs = [
+                {
+                  extract_from = "parse_dns_redirect";
+                  conditions = [
+                    {
+                      type = "vrl";
+                      source = ''
+                        assert_eq!(.prefix, "dns-redirect")
+                        assert_eq!(.iface, "iot")
+                        assert_eq!(.dpt, "53")
+                      '';
+                    }
+                  ];
+                }
+              ];
+              no_outputs_from = [ "parse_ntp_redirect" ];
+            }
+            {
+              name = "NTP redirects are emitted only as NTP events";
+              inputs = [
+                {
+                  insert_at = "filter_redirect_logs";
+                  type = "log";
+                  log_fields = {
+                    SYSLOG_FACILITY = LOCAL2;
+                    message = "NTP-REDIRECT: IN=lan OUT= SRC=10.13.84.20 DST=1.2.3.4 PROTO=UDP SPT=12345 DPT=123";
+                  };
+                }
+              ];
+              outputs = [
+                {
+                  extract_from = "parse_ntp_redirect";
+                  conditions = [
+                    {
+                      type = "vrl";
+                      source = ''
+                        assert_eq!(.prefix, "ntp-redirect")
+                        assert_eq!(.iface, "lan")
+                        assert_eq!(.dpt, "123")
+                      '';
+                    }
+                  ];
+                }
+              ];
+              no_outputs_from = [ "parse_dns_redirect" ];
+            }
+            {
+              name = "Unrecognized redirect events are dropped";
+              inputs = [
+                {
+                  insert_at = "filter_redirect_logs";
+                  type = "log";
+                  log_fields = {
+                    SYSLOG_FACILITY = LOCAL2;
+                    message = "OTHER-REDIRECT: IN=iot SRC=10.13.93.50 DST=8.8.8.8 PROTO=UDP DPT=999";
+                  };
+                }
+                {
+                  insert_at = "filter_redirect_logs";
+                  type = "log";
+                  log_fields = {
+                    SYSLOG_FACILITY = LOCAL2;
+                    not_message = "malformed event";
+                  };
+                }
+              ];
+              no_outputs_from = [
+                "parse_dns_redirect"
+                "parse_ntp_redirect"
+              ];
+            }
+          ];
           sinks = {
             console = {
               type = "console";

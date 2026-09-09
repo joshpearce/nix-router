@@ -23,13 +23,14 @@
   };
 
   outputs =
-    {
+    flakes@{
+      self,
       nixpkgs,
       agenix,
       vscode-server,
       private,
       ...
-    }@flakes:
+    }:
     let
       system = "x86_64-linux";
 
@@ -77,6 +78,7 @@
       checks.${system} = import ./tests {
         inherit (nixpkgs) lib;
         pkgs = nixpkgs.legacyPackages.${system};
+        vectorSettings = self.nixosConfigurations.router.config.services.vector2.settings;
       };
     };
 }
