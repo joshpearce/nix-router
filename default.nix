@@ -72,6 +72,11 @@
 
   system.includeBuildDependencies = false;
 
+  # This router has no TPM device or TPM-backed storage. Leaving the NixOS
+  # default enabled makes switch-to-configuration wait forever for dev-tpm0
+  # and dev-tpmrm0 during sysinit reactivation.
+  systemd.tpm2.enable = false;
+
   environment.systemPackages = with pkgs; [
     pciutils
     tcpdump
