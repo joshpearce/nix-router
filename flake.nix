@@ -2,7 +2,10 @@
   description = "Router NixOS configuration";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    # Track the supported release used by the running router. This receives
+    # security fixes without pulling unsupported x86_64-darwin outputs through
+    # the vscode-server input during evaluation.
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
 
     agenix = {
       url = "github:ryantm/agenix";
