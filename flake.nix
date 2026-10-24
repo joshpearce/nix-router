@@ -41,7 +41,7 @@
 
       # Big cmake upgrade with lots of issues. Need to try removing this later.
       # https://github.com/NixOS/nixpkgs/issues/445447
-      overlay-rtrlib = _final: prev: {
+      overlay-router = _final: prev: {
         rtrlib = prev.rtrlib.overrideAttrs (old: {
           cmakeFlags = (old.cmakeFlags or [ ]) ++ [
             "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
@@ -56,6 +56,11 @@
               --replace-fail ".fetch_update(" ".try_update("
           '';
         });
+      };
+
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [ overlay-router ];
       };
 
     in
@@ -80,7 +85,7 @@
               };
               nixpkgs = {
                 config.allowUnfree = true;
-                overlays = [ overlay-rtrlib ];
+                overlays = [ overlay-router ];
               };
             }
           )
@@ -91,7 +96,7 @@
 
       checks.${system} = import ./tests {
         inherit (nixpkgs) lib;
-        pkgs = nixpkgs.legacyPackages.${system};
+        inherit pkgs;
         vectorSettings = self.nixosConfigurations.router.config.services.vector2.settings;
       };
     };
