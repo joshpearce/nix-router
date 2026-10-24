@@ -12,7 +12,12 @@
     vscode-server = {
       url = "github:joshpearce/nixos-vscode-server";
       inputs.nixpkgs.follows = "nixpkgs";
+      # The router only consumes Linux outputs. Current unstable no longer
+      # evaluates x86_64-darwin, which flake-utils otherwise includes by default.
+      inputs.flake-utils.inputs.systems.follows = "linux-systems";
     };
+
+    linux-systems.url = "github:nix-systems/x86_64-linux";
 
     # Private configuration - override this with your local private/ directory
     # Build with: nixos-rebuild switch --flake .#router --override-input private path:./private
