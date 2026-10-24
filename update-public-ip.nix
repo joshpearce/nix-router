@@ -34,13 +34,13 @@ let
     IAM_ROLE_ARN=arn:aws:iam::${config.private.aws.accountId}:role/${config.private.aws.iamRoleName}
     HOSTED_ZONE_ID=${config.private.aws.route53ZoneId}
 
-    sess_creds=$(${lib.getExe pkgs.awscli} sts assume-role --role-arn $IAM_ROLE_ARN --role-session-name update_ip)
+    sess_creds=$(${lib.getExe pkgs.awscli2} sts assume-role --role-arn $IAM_ROLE_ARN --role-session-name update_ip)
 
     export AWS_ACCESS_KEY_ID=$(echo $sess_creds | ${lib.getExe pkgs.jq} -r .Credentials.AccessKeyId)
     export AWS_SECRET_ACCESS_KEY=$(echo $sess_creds | ${lib.getExe pkgs.jq} -r .Credentials.SecretAccessKey)
     export AWS_SESSION_TOKEN=$(echo $sess_creds | ${lib.getExe pkgs.jq} -r .Credentials.SessionToken)
 
-    echo $(${lib.getExe pkgs.awscli} sts get-caller-identity)
+    echo $(${lib.getExe pkgs.awscli2} sts get-caller-identity)
 
     wan_ip=$(${lib.getBin pkgs.iproute2}/bin/ip -json addr show dev ${wanIface} | ${lib.getExe pkgs.jq} -r '.[0] | .addr_info[] | select(.family == "inet")| .local')
     echo "WAN IP: ''${wan_ip}"
@@ -52,7 +52,7 @@ let
      echo "$wan_ip is a Public IP. Proceeding."
     fi
 
-    dns_ip=$(${lib.getExe pkgs.awscli} route53 list-resource-record-sets --hosted-zone-id $HOSTED_ZONE_ID --output json | ${lib.getExe pkgs.jq} -r '.ResourceRecordSets[] | select(.Name == "${homeDomain}.") | .ResourceRecords[0].Value')
+    dns_ip=$(${lib.getExe pkgs.awscli2} route53 list-resource-record-sets --hosted-zone-id $HOSTED_ZONE_ID --output json | ${lib.getExe pkgs.jq} -r '.ResourceRecordSets[] | select(.Name == "${homeDomain}.") | .ResourceRecords[0].Value')
     echo "DNS IP: ''${dns_ip}"
 
     if [ -z "''${dns_ip}" ]; then
@@ -66,7 +66,7 @@ let
     if [ "''${wan_ip}" != "''${dns_ip}" ]; then
     cp ${r53template} /tmp/update-ip/t.json
     sed -i "s/IP_TO_REPLACE/''${wan_ip}/" /tmp/update-ip/t.json
-    ${lib.getExe pkgs.awscli} route53 change-resource-record-sets --hosted-zone-id $HOSTED_ZONE_ID --change-batch file:///tmp/update-ip/t.json
+    ${lib.getExe pkgs.awscli2} route53 change-resource-record-sets --hosted-zone-id $HOSTED_ZONE_ID --change-batch file:///tmp/update-ip/t.json
 
     rm -rf /tmp/update-ip/
 

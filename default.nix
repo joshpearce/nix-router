@@ -80,7 +80,7 @@
   environment.systemPackages = with pkgs; [
     pciutils
     tcpdump
-    awscli
+    awscli2
     jq
     netcat-gnu
     runitor
