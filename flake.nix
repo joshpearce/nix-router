@@ -53,7 +53,7 @@
         vector = prev.vector.overrideAttrs (old: {
           postPatch = (old.postPatch or "") + ''
             substituteInPlace lib/vector-common/src/atomic.rs \
-              --replace-fail ".fetch_update(" ".try_update("
+              --replace-fail ".fetch_update(set_order" ".try_update(set_order"
           '';
         });
       };
