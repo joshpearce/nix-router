@@ -47,6 +47,15 @@
             "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
           ];
         });
+
+        # Vector 0.59 denies deprecation warnings, while Rust 1.99 renamed
+        # AtomicU64::fetch_update to try_update without changing its behavior.
+        vector = prev.vector.overrideAttrs (old: {
+          postPatch = (old.postPatch or "") + ''
+            substituteInPlace lib/vector-common/src/atomic.rs \
+              --replace-fail ".fetch_update(" ".try_update("
+          '';
+        });
       };
 
     in
