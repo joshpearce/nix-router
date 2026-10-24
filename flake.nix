@@ -54,6 +54,8 @@
           postPatch = (old.postPatch or "") + ''
             substituteInPlace lib/vector-common/src/atomic.rs \
               --replace-fail ".fetch_update(set_order" ".try_update(set_order"
+            substituteInPlace lib/vector-buffers/src/variants/disk_v2/ledger.rs \
+              --replace-fail ".fetch_update(" ".try_update("
           '';
         });
       };
