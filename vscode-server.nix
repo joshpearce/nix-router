@@ -9,7 +9,7 @@ lib.mkIf config.my.vsCodeServer {
     vscode-server = {
       enable = true;
       enableFHS = true;
-      nodejsPackage = pkgs.nodejs_20;
+      nodejsPackage = pkgs.nodejs_24;
     };
   };
 }
