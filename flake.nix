@@ -4,6 +4,10 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
+    # Vector 0.60 is cached at this revision while the current unstable pin's
+    # Vector 0.59 does not build with its Rust toolchain.
+    vector-nixpkgs.url = "github:nixos/nixpkgs/ccbb8fba1fe8cfca726d4fdac11c5771ac1fbd9d";
+
     agenix = {
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -31,6 +35,7 @@
     flakes@{
       self,
       nixpkgs,
+      vector-nixpkgs,
       agenix,
       vscode-server,
       private,
@@ -48,16 +53,7 @@
           ];
         });
 
-        # Vector 0.59 denies deprecation warnings, while Rust 1.99 renamed
-        # AtomicU64::fetch_update to try_update without changing its behavior.
-        vector = prev.vector.overrideAttrs (old: {
-          postPatch = (old.postPatch or "") + ''
-            substituteInPlace lib/vector-common/src/atomic.rs \
-              --replace-fail ".fetch_update(set_order" ".try_update(set_order"
-            substituteInPlace lib/vector-buffers/src/variants/disk_v2/ledger.rs \
-              --replace-fail ".fetch_update(" ".try_update("
-          '';
-        });
+        vector = vector-nixpkgs.legacyPackages.${system}.vector;
       };
 
       pkgs = import nixpkgs {

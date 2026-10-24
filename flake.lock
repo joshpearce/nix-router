@@ -88,7 +88,24 @@
         "linux-systems": "linux-systems",
         "nixpkgs": "nixpkgs",
         "private": "private",
+        "vector-nixpkgs": "vector-nixpkgs",
         "vscode-server": "vscode-server"
+      }
+    },
+    "vector-nixpkgs": {
+      "locked": {
+        "lastModified": 1792845439,
+        "narHash": "sha256-3z27L6H+X7T0EKCUxteFfNFuY5+G/Sblx1SFcE3DVsY=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "ccbb8fba1fe8cfca726d4fdac11c5771ac1fbd9d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "ccbb8fba1fe8cfca726d4fdac11c5771ac1fbd9d",
+        "type": "github"
       }
     },
     "vscode-server": {
