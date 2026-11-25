@@ -63,6 +63,7 @@ in
       wantedBy = [ "multi-user.target" ];
       wants = [ "network-online.target" ];
       after = [ "network-online.target" ];
+      restartTriggers = [ config.environment.etc."hosts.local".source ];
       serviceConfig = {
         ExecStart = "${lib.getExe pkgs.dnsproxy} --cache ${listen} -u ${primaryDNS} -f ${secondaryDNS} -b ${bootstrapDNS} --timeout=500ms --hosts-file-enabled --hosts-files=/etc/hosts.local";
         ExecReload = "${pkgs.coreutils}/bin/kill -HUP $MAINPID";
