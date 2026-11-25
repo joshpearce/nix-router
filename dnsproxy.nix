@@ -44,10 +44,6 @@ let
       name = "ha.jjpdev.com";
     }
     {
-      address = "104.54.73.206";
-      name = "home.jjpdev.com";
-    }
-    {
       address = "10.13.84.100";
       name = "nas.jjpdev.com";
     }

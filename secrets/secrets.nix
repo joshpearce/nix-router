@@ -21,6 +21,16 @@
       owner = config.private.user.name;
       mode = "0440";
     };
+    home-ddns-key-id = {
+      file = ./home-ddns-key-id.age;
+      owner = config.private.user.name;
+      mode = "0440";
+    };
+    home-ddns-secret = {
+      file = ./home-ddns-secret.age;
+      owner = config.private.user.name;
+      mode = "0440";
+    };
     ts-oauth-client-id = {
       file = ./router-ts-oauth-client-id.age;
       owner = config.private.user.name;

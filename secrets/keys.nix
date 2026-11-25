@@ -11,6 +11,8 @@ in
   "ses-smtp-user.age".publicKeys = keys;
   "aws-domain-mgr-key-id.age".publicKeys = keys;
   "aws-domain-mgr-secret.age".publicKeys = keys;
+  "home-ddns-key-id.age".publicKeys = keys;
+  "home-ddns-secret.age".publicKeys = keys;
   "router-ts-oauth-client-id.age".publicKeys = keys;
   "router-ts-oauth-client-secret.age".publicKeys = keys;
 }
