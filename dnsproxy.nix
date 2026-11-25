@@ -28,10 +28,6 @@ let
   # dnsproxy's upstream fallback.
   lanIngressEntries = [
     {
-      address = "75.2.60.5";
-      name = "jjpdev.com";
-    }
-    {
       address = "10.13.84.100";
       name = "calibre.jjpdev.com";
     }
@@ -54,10 +50,6 @@ let
     {
       address = "10.13.84.1";
       name = "router.jjpdev.com";
-    }
-    {
-      address = "10.54.0.103";
-      name = "vault.jjpdev.com";
     }
   ];
 
