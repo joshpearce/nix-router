@@ -29,6 +29,10 @@ let
   lanIngressEntries = [
     {
       address = "10.13.84.100";
+      name = "calibre.jjpdev.com";
+    }
+    {
+      address = "10.13.84.100";
       name = "caddy.jjpdev.com";
     }
   ];
