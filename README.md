@@ -256,6 +256,10 @@ $ dig homeassistant.home +short
 3. dnsproxy serves these records via the `--hosts-files` option
 4. All VLANs use the router as their DNS server
 
+Publicly trusted LAN ingress names are also listed explicitly in
+`dnsproxy.nix`. Those records resolve to private addresses from the router's
+local hosts file, so cold lookups do not depend on Home Assistant or WAN DNS.
+
 ### DNS Name Validation
 
 Device names must be valid DNS labels per RFC 1123:

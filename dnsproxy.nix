@@ -23,9 +23,23 @@ let
   # Valid entries for hosts file
   validEntries = builtins.filter (e: routerLib.isValidDnsName e.name) namedEntries;
 
+  # Publicly trusted LAN ingress names must resolve without consulting HA or a
+  # WAN resolver. Keep these explicit so a missing target cannot be hidden by
+  # dnsproxy's upstream fallback.
+  lanIngressEntries = [
+    {
+      address = "10.13.84.100";
+      name = "caddy.jjpdev.com";
+    }
+  ];
+
   # Generate hosts file content
   hostsFileContent =
-    builtins.concatStringsSep "\n" (map (e: "${e.address} ${e.name}.home") validEntries) + "\n";
+    builtins.concatStringsSep "\n" (
+      (map (e: "${e.address} ${e.name}.home") validEntries)
+      ++ (map (e: "${e.address} ${e.name}") lanIngressEntries)
+    )
+    + "\n";
 in
 {
   config = {
