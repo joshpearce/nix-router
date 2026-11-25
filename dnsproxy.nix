@@ -28,12 +28,40 @@ let
   # dnsproxy's upstream fallback.
   lanIngressEntries = [
     {
+      address = "75.2.60.5";
+      name = "jjpdev.com";
+    }
+    {
       address = "10.13.84.100";
       name = "calibre.jjpdev.com";
     }
     {
       address = "10.13.84.100";
       name = "caddy.jjpdev.com";
+    }
+    {
+      address = "10.13.93.50";
+      name = "ha.jjpdev.com";
+    }
+    {
+      address = "104.54.73.206";
+      name = "home.jjpdev.com";
+    }
+    {
+      address = "10.13.84.100";
+      name = "nas.jjpdev.com";
+    }
+    {
+      address = "10.54.0.88";
+      name = "plex.jjpdev.com";
+    }
+    {
+      address = "10.13.84.1";
+      name = "router.jjpdev.com";
+    }
+    {
+      address = "10.54.0.103";
+      name = "vault.jjpdev.com";
     }
   ];
 
